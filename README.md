@@ -52,6 +52,14 @@ cd Upskillr-project-repo
 ### 2️⃣ Install Dependencies
 
 ```
+cd frontend
+npm install
+```
+
+Similarly for backend:
+
+```
+cd backend
 npm install
 ```
 
@@ -70,6 +78,7 @@ Use .env.example as a reference
 ### 4️⃣ Run the Development Server
 
 ```
+cd frontend
 npm run dev
 ```
 
