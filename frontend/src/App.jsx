@@ -10,6 +10,7 @@ import InstructorLayout from "./components/Instructor/InstructorLayout";
 import Browse from "./components/Learner/Browse";
 import MyCourses from "./components/Instructor/MyCourses";
 import CourseCreateWizard from "./components/Instructor/CourseCreate/CourseCreateWizard";
+import CoursePlayer from "./components/Learner/CoursePlayer";
 
 function App() {
   
@@ -24,6 +25,7 @@ function App() {
           {/* Nested routes can be added here if needed */}
           <Route path="my-courses" element={<LearnerCourses />} />
           <Route path="browse-courses" element={<Browse />} />
+          <Route path="course-dummy" element={<CoursePlayer />} />
         </Route>
         <Route path="/Instructor" element={<InstructorLayout />} >
           <Route index element={<InstructorDashboard />} />
