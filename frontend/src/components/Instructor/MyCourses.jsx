@@ -3,9 +3,12 @@ import {
   MoreVertical, Star, Users, Clock, 
   Edit, Trash2, Eye, UploadCloud 
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const MyCourses = () => {
-  // MOCK DATA (Matches your image exactly)
+  const navigate = useNavigate();
+
+  // MOCK DATA
   const courses = [
     {
       id: 1,
@@ -73,14 +76,14 @@ const MyCourses = () => {
       description: "Learn blockchain technology and smart contract development",
       image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&w=600&q=80",
     }
-  ];
+  ]; // 👈 THIS WAS MISSING IN YOUR ERROR SCREENSHOT
 
-  // EXACT BADGE COLORS FROM IMAGE
+  // Helper for Badge Colors
   const getStatusColor = (status) => {
     switch(status) {
-      case "Published": return "bg-emerald-500 text-white"; // Green badge
-      case "Unpublished": return "bg-gray-400 text-white";  // Grey badge
-      case "Draft": return "bg-amber-400 text-white";       // Yellow/Orange badge
+      case "Published": return "bg-emerald-500 text-white";
+      case "Unpublished": return "bg-gray-400 text-white";
+      case "Draft": return "bg-amber-400 text-white";
       default: return "bg-gray-400 text-white";
     }
   };
@@ -94,7 +97,12 @@ const MyCourses = () => {
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Manage Courses</h1>
           <p className="text-gray-500 mt-1">Create, edit, and manage your course content</p>
         </div>
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all font-medium shadow-md shadow-indigo-200">
+        
+        {/* CREATE COURSE BUTTON (With Navigation Logic) */}
+        <button 
+          onClick={() => navigate('/Instructor/create-course')}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all font-medium shadow-md shadow-indigo-200"
+        >
           <Plus size={20} />
           Create Course
         </button>
@@ -179,7 +187,7 @@ const MyCourses = () => {
               {/* Action Buttons */}
               <div className="flex items-center gap-3">
                 <button className="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-indigo-100 shadow-lg">
-                   <Edit size={16} /> Edit
+                    <Edit size={16} /> Edit
                 </button>
                 <button className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                   <Trash2 size={18} />
