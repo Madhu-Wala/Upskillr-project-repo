@@ -9,7 +9,7 @@ import ResourcePanel from './ResourcePanel';
 
 const CoursePlayer = () => {
   const navigate = useNavigate();
-  
+
   // Dummy Course Data
   const courseInfo = { title: "Advanced JavaScript Patterns" };
   const lessons = [
