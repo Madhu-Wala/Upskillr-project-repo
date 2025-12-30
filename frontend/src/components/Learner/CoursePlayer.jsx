@@ -6,9 +6,12 @@ import ReactMarkdown from 'react-markdown';
 import LessonSidebar from './LessonSidebar';
 import VideoPlayer from './VideoPlayer';
 import ResourcePanel from './ResourcePanel';
+import CourseFeedback from './CourseFeedback';
 
 const CoursePlayer = () => {
   const navigate = useNavigate();
+
+  const [showFeedback, setShowFeedback] = useState(false);
 
   // Dummy Course Data
   const courseInfo = { title: "Advanced JavaScript Patterns" };
@@ -74,28 +77,6 @@ const CoursePlayer = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
-      {/* Navbar Highlighted at My Courses */}
-      <nav className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/dashboard')}>
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <BookOpen className="text-white w-5 h-5" />
-            </div>
-            <span className="font-bold text-xl text-gray-900">UpSkillr</span>
-          </div>
-          <div className="hidden md:flex gap-6">
-            {['Dashboard', 'My Courses', 'Browse', 'Achievements'].map(item => (
-              <button key={item} className={`text-sm font-bold ${item === 'My Courses' ? 'text-indigo-600' : 'text-gray-400'}`}>
-                {item}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <Bell className="w-5 h-5 text-gray-400" />
-          <img src="https://i.pravatar.cc/150?u=sarah" className="w-9 h-9 rounded-full border border-gray-100" />
-        </div>
-      </nav>
 
       <div className="flex">
         {/* Left Lesson Selection */}
@@ -142,8 +123,28 @@ const CoursePlayer = () => {
           resources={currentLesson.resources} 
           quizId={currentLesson.quizId} 
           onMarkComplete={handleMarkComplete}
+          onShowFeedback={() => setShowFeedback(true)}
         />
       </div>
+
+      {showFeedback && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div 
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" 
+            onClick={() => setShowFeedback(false)}
+          />
+          <div className="relative z-10 w-full max-w-2xl animate-in zoom-in duration-300">
+            <CourseFeedback 
+              courseTitle={courseInfo.title}
+              onClose={() => setShowFeedback(false)}
+              onSubmit={(data) => {
+                console.log("Feedback data:", data);
+                setShowFeedback(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
