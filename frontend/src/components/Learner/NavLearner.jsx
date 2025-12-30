@@ -10,7 +10,7 @@ function NavLearner(){
      const navLinkClass = ({ isActive }) =>
   `relative transition-all duration-300 text-sm py-1 ${
     isActive 
-      ? "text-[#5715f1] font-bold" 
+      ? "text-indigo-600 font-bold" 
       : "text-gray-500 font-medium hover:text-[#5715f1]"
   }`;
 
