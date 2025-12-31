@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom';
 import Step1Basic from './Step1Basic';
 import Step2Thumbnail from './Step2Thumbnail';
 import Step3Curriculum from './Step3Curriculum';
-import Step4Publish from './Step4Publish';
+import Step4QuizCreation from './Step4QuizCreation';
+import Step5Publish from './Step5Publish';
 
 const CourseCreateWizard = () => {
   const [activeStep, setActiveStep] = useState(1);
@@ -13,7 +14,8 @@ const CourseCreateWizard = () => {
     { id: 1, title: "Basic Info" },
     { id: 2, title: "Thumbnail" },
     { id: 3, title: "Add Lessons" },
-    { id: 4, title: "Preview & Publish" }
+    { id: 4, title: "Create Quiz" },
+    { id: 5, title: "Preview & Publish" }
   ];
 
   return (
@@ -63,7 +65,8 @@ const CourseCreateWizard = () => {
         {activeStep === 1 && <Step1Basic onNext={() => setActiveStep(2)} />}
         {activeStep === 2 && <Step2Thumbnail onNext={() => setActiveStep(3)} onBack={() => setActiveStep(1)} />}
         {activeStep === 3 && <Step3Curriculum onNext={() => setActiveStep(4)} onBack={() => setActiveStep(2)} />}
-        {activeStep === 4 && <Step4Publish onBack={() => setActiveStep(3)} />}
+        {activeStep === 4 && <Step4QuizCreation onNext={()=>setActiveStep(5)} onBack={()=> setActiveStep(3)}/>}
+        {activeStep === 5 && <Step5Publish onBack={() => setActiveStep(4)} />}
       </main>
 
     </div>
