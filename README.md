@@ -137,3 +137,11 @@ const apiUrl = import.meta.env.VITE_API_URL
 ## 📌 Quick Start Summary
 
 ### Clone → npm install → create .env → npm run dev
+
+## Database Structure (Scehma Tab) : 
+
+[Upskillr Plan](https://docs.google.com/document/d/1miNNdWp-rjMoEyrDmCoMTg3PLcWgIoJbDTyQ5ZU-_L0/edit?usp=sharing)
+
+## Figma Prototype:
+
+[Figma](https://www.figma.com/design/bfWu7QR509N2vF33pywHcf/UpSkiller?node-id=35-44&p=f&t=INEAQH7lplvSLnBk-0)
