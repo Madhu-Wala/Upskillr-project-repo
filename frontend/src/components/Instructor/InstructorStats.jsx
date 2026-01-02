@@ -2,7 +2,6 @@ import { DollarSign, Users, Star, BookOpen, TrendingUp, ArrowUpRight } from 'luc
 
 const InstructorStats = () => {
   const stats = [
-    { label: "Total Revenue", value: "$12,450", icon: DollarSign, color: "bg-emerald-100 text-emerald-600", trend: "+12%" },
     { label: "Total Students", value: "842", icon: Users, color: "bg-blue-100 text-blue-600", trend: "+5%" },
     { label: "Average Rating", value: "4.8", icon: Star, color: "bg-amber-100 text-amber-600", trend: "+0.2" },
     { label: "Active Courses", value: "6", icon: BookOpen, color: "bg-indigo-100 text-indigo-600", trend: "0" },
