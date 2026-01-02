@@ -20,9 +20,8 @@ import CourseCreateWizard from "./components/Instructor/CourseCreate/CourseCreat
 import InstructorStats from "./components/Instructor/InstructorStats"; 
 import StudentList from "./components/Instructor/StudentList";
 import InstructorProfile from "./components/Instructor/InstructorProfile";
-import Earnings from "./components/Instructor/Earnings";
 import Reviews from "./components/Instructor/Reviews";
-import Messages from "./components/Instructor/Messages";
+
 //  Import the Notifications component
 import Notifications from "./components/Instructor/Notifications";
 
@@ -107,8 +106,6 @@ const dummyQuestions = [
           {/* Core Features */}
           <Route path="my-courses" element={<MyCourses />} />
           <Route path="students" element={<StudentList />} />
-          <Route path="messages" element={<Messages />} />
-          <Route path="earnings" element={<Earnings />} />
           <Route path="reviews" element={<Reviews />} />
           
           {/* Settings & Extras */}

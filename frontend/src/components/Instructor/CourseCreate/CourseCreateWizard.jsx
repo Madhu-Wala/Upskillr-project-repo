@@ -13,7 +13,7 @@ const CourseCreateWizard = () => {
   const steps = [
     { id: 1, title: "Basic Info" },
     { id: 2, title: "Thumbnail" },
-    { id: 3, title: "Add Lessons" },
+    { id: 3, title: "Add Lessons"},
     { id: 4, title: "Create Quiz" },
     { id: 5, title: "Preview & Publish" }
   ];
