@@ -21,11 +21,11 @@ function Browse() {
   const categories = ['All Categories', 'Development', 'Design', 'Business', 'Marketing', 'Data Science'];
 
   const courseData = [
-    { id: 1, title: "Complete React Development Bootcamp", instructor: "Sarah Johnson", rating: 4.8, students: 2341, price: 89, thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=400&auto=format&fit=crop" },
-    { id: 2, title: "UI/UX Design Masterclass", instructor: "Michael Chen", rating: 4.9, students: 1892, price: 129, thumbnail: null }, // Falls back to gradient
-    { id: 3, title: "Data Science with Python", instructor: "Dr. Emma Wilson", rating: 4.7, students: 3156, price: 149, thumbnail: "https://images.unsplash.com/photo-1551288049-bbbda536639a?q=80&w=400&auto=format&fit=crop" },
-    { id: 4, title: "Modern Web Security", instructor: "Mark Anderson", rating: 4.6, students: 987, price: 119, thumbnail: null }, // Falls back to gradient
-    { id: 5, title: "Digital Marketing Strategy", instructor: "Alex Rodriguez", rating: 4.6, students: 1567, price: 99, thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=400&auto=format&fit=crop" },
+    { id: 1, title: "Complete React Development Bootcamp", instructor: "Sarah Johnson", rating: 4.8, students: 2341,  thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=400&auto=format&fit=crop" },
+    { id: 2, title: "UI/UX Design Masterclass", instructor: "Michael Chen", rating: 4.9, students: 1892, thumbnail: null }, // Falls back to gradient
+    { id: 3, title: "Data Science with Python", instructor: "Dr. Emma Wilson", rating: 4.7, students: 3156, thumbnail: "https://images.unsplash.com/photo-1551288049-bbbda536639a?q=80&w=400&auto=format&fit=crop" },
+    { id: 4, title: "Modern Web Security", instructor: "Mark Anderson", rating: 4.6, students: 987, thumbnail: null }, // Falls back to gradient
+    { id: 5, title: "Digital Marketing Strategy", instructor: "Alex Rodriguez", rating: 4.6, students: 1567, thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=400&auto=format&fit=crop" },
   ];
 
   return (

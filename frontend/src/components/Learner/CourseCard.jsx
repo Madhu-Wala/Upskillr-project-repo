@@ -37,7 +37,7 @@ const CourseCard = ({ course, fallbackGradient }) => {
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-          <span className="text-2xl font-black text-gray-900">${course.price}</span>
+          
           <button className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all active:scale-95 shadow-lg shadow-indigo-100">
             Enroll
           </button>
