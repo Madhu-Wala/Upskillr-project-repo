@@ -38,14 +38,6 @@ const Reviews = () => {
             
             <p className="text-gray-600 text-sm leading-relaxed mb-6">"{review.comment}"</p>
             
-            <div className="flex items-center gap-4 pt-4 border-t border-gray-50">
-                <button className="text-indigo-600 text-sm font-bold hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2">
-                    <MessageSquare size={16} /> Reply
-                </button>
-                <button className="text-gray-400 text-sm font-medium hover:text-gray-600 flex items-center gap-2">
-                    <ThumbsUp size={16} /> Helpful
-                </button>
-            </div>
           </div>
         ))}
       </div>
