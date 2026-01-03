@@ -79,10 +79,10 @@ const InstructorDashboard = () => {
             {/* Desktop Sign Out (Hidden on Mobile) */}
             <button 
               onClick={handleSignOut}
-              className="hidden lg:flex items-center gap-2 text-gray-500 hover:text-red-600 transition-colors text-sm font-medium ml-2"
+              className="hidden md:flex items-center gap-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 px-3 py-2 rounded-xl transition-all font-bold text-sm"
             >
-               <LogOut size={18} />
-               <span>Sign Out</span>
+              <LogOut className="w-4 h-4" />
+              <span>Sign Out</span>
             </button>
 
             {/* 👇 MOBILE MENU BUTTON (Visible only on Mobile) */}

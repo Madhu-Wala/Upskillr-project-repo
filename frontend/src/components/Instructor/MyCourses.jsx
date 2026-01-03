@@ -204,16 +204,7 @@ const MyCourses = () => {
         ))}
       </div>
 
-      {/* 4. PAGINATION */}
-      <div className="flex justify-center items-center gap-2 pt-8 pb-12">
-        <button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 text-sm">‹</button>
-        <button className="w-9 h-9 flex items-center justify-center rounded-lg bg-indigo-600 text-white text-sm font-bold shadow-md shadow-indigo-200">1</button>
-        <button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 text-sm font-medium">2</button>
-        <button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 text-sm font-medium">3</button>
-        <span className="text-gray-300 px-2">...</span>
-        <button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 text-sm font-medium">8</button>
-        <button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 text-sm">›</button>
-      </div>
+      
 
     </div>
   );
