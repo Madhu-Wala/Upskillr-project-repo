@@ -76,27 +76,7 @@ function Browse() {
           ))}
         </div>
 
-        {/* Pagination Section */}
-        <div className="flex items-center justify-center gap-2">
-          <button className="p-2.5 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-indigo-600 transition-colors shadow-sm">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          {[1, 2, 3, '...', 42].map((page, idx) => (
-            <button
-              key={idx}
-              className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
-                page === 1 
-                ? 'bg-indigo-600 text-white' 
-                : 'bg-white text-gray-500 border border-gray-100 hover:bg-indigo-50'
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-          <button className="p-2.5 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-indigo-600 transition-colors shadow-sm">
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
+        
       </div>
     </div>
   );
