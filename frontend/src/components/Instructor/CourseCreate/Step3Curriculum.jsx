@@ -1,8 +1,12 @@
 import { PlayCircle, FileText, Plus, Edit2, Trash2, UploadCloud } from 'lucide-react';
-
+import MarkdownEditor from './MarkdownEditor';
+import { useState } from 'react';
 const Step3Curriculum = ({ onNext, onBack }) => {
+
+  const [lessonContent, setLessonContent] = useState("");
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       
       {/* Existing Lessons List */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between group hover:border-indigo-200 transition-all">
@@ -50,6 +54,13 @@ const Step3Curriculum = ({ onNext, onBack }) => {
             <div>
                  <label className="text-sm font-bold text-gray-700 block mb-2">Lesson Summary</label>
                  <textarea rows="3" placeholder="Brief summary..." className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none resize-none"></textarea>
+            {/* NEW MARKDOWN EDITOR (Replacing the old textarea) */}
+      <div className="py-4">
+        <MarkdownEditor 
+          value={lessonContent} 
+          onChange={setLessonContent} 
+        />
+      </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-4">

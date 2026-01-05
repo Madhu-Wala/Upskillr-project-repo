@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Mail, Eye, EyeOff, LogIn } from 'lucide-react';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const nav=useNavigate();
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center bg-slate-50 overflow-hidden font-sans">
@@ -121,7 +123,7 @@ const Login = () => {
         </div>
         <div className="text-center mt-4">
           <button
-         
+            onClick={()=>nav("/")}
             className="px-5 py-2.5 w-20 cursor-pointer !mt-4 text-[15px] font-medium bg-indigo-600 hover:bg-indigo-800 text-white rounded-md"
           >
             Back
