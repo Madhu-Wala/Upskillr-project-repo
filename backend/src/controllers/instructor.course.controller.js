@@ -4,87 +4,90 @@ import Enrollment from "../models/Enrollment.js";
 /**
  * @route POST /api/instructor/courses
  * @desc Create a new course
- * @access Private Instructor
+ * @access Instructor
  */
+export const createCourse = async (req, res) => {
+  try {
+    const instructorId = req.user._id;
+    const { title, description, category, difficulty, thumbnail } = req.body;
 
-export const createCourse = async(req,res) => {
-    try{
-        const instructorId = req.user._id;
-
-        const{
-            title,
-            description,
-            category,
-            difficulty,
-            thumbnail
-        } = req.body;
-
-        const course = await Course.create({
-            title,
-            description,
-            category,
-            difficulty,
-            thumbnail,
-            instructorId,
-            status: "draft"
-        });
-
-        res.status(201).json(course);
-    }catch(error){
-        console.error("CREATE COURSE ERROR: ",error);
-        res.status(500).json({message:"Server error"});
+    if (!title || !description || !category || !difficulty) {
+      return res.status(400).json({
+        message: "All required fields must be provided"
+      });
     }
+
+    const course = await Course.create({
+      title,
+      description,
+      category,
+      difficulty,
+      thumbnail,
+      instructorId,
+      status: "draft"
+    });
+
+    res.status(201).json(course);
+
+  } catch (error) {
+    console.error("CREATE COURSE ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 /**
  * @route PUT /api/instructor/courses/:courseId/publish
- * @desc Publish Course
- * @access Private Instructor
+ * @desc Publish a course
+ * @access Instructor
  */
+export const publishCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const instructorId = req.user._id;
 
-export const publishCourse = async(req,res) => {
-    try{
-        const { courseId } = req.params;
-        const instructorId = req.user._id;
+    const course = await Course.findOne({
+      _id: courseId,
+      instructorId
+    });
 
-        const course = await Course.findOne({
-            _id: courseId,
-            instructorId
-        });
-
-        if(!course){
-            return res.status(404).json({message:"Course Not Found!"});
-        }
-
-        course.status = "published";
-        course.publishedAt = new Date();
-        await course.save();
-
-        res.status(200).json({
-            message: "Course Published Successfully!",
-            course
-        });
-
-    }catch(error){
-        console.error("PUBLISH COURSE ERROR: ",error);
-        res.status(500).json({message:"Server Error"});
+    if (!course) {
+      return res.status(404).json({
+        message: "Course not found or you do not own it"
+      });
     }
-}
+
+    if (course.lessonsCount === 0) {
+      return res.status(400).json({
+        message: "Add at least one lesson before publishing"
+      });
+    }
+
+    course.status = "published";
+    course.publishedAt = new Date();
+    await course.save();
+
+    res.status(200).json({
+      message: "Course published successfully",
+      course
+    });
+
+  } catch (error) {
+    console.error("PUBLISH COURSE ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 /**
  * @route GET /api/instructor/courses
- * @desc View Courses
+ * @desc View instructor courses with enrollment count
  * @access Instructor
  */
-
 export const getInstructorCourses = async (req, res) => {
   try {
     const instructorId = req.user._id;
 
     const courses = await Course.aggregate([
-      {
-        $match: { instructorId }
-      },
+      { $match: { instructorId } },
       {
         $lookup: {
           from: "enrollments",
@@ -99,13 +102,9 @@ export const getInstructorCourses = async (req, res) => {
         }
       },
       {
-        $project: {
-          enrollments: 0 // remove array, keep count only
-        }
+        $project: { enrollments: 0 }
       },
-      {
-        $sort: { createdAt: -1 }
-      }
+      { $sort: { createdAt: -1 } }
     ]);
 
     res.status(200).json(courses);

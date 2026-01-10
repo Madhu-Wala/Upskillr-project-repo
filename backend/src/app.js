@@ -9,6 +9,8 @@ import enrollmentRoutes from "./routes/enrollment.routes.js";
 import progressRoutes from "./routes/progress.routes.js";
 import instructorRoutes from "./routes/instructor.routes.js";
 import learnerRoutes from "./routes/learner.routes.js";
+import quizRoutes from "./routes/quiz.routes.js";
+import reviewRoutes from "./routes/review.routes.js"; 
 
 // Middleware
 import { protect } from "./middleware/auth.middleware.js";
@@ -36,6 +38,13 @@ app.use("/api/progress", progressRoutes);
 app.use("/api/instructor", instructorRoutes);
 app.use("/api/lessons", lessonRoutes);
 app.use("/api/learners",learnerRoutes);
+
+//quiz routes
+app.use("/api",quizRoutes);
+app.use("/api/quizzes", quizRoutes);
+
+//review routes
+app.use("/api", reviewRoutes);
 
 // Protected test route
 app.get("/api/profile", protect, (req, res) => {

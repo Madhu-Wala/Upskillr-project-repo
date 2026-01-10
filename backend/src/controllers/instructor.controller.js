@@ -11,45 +11,67 @@ export const getInstructorAnalytics = async (req, res) => {
   try {
     const instructorId = req.user._id;
 
-    // 1. Fetch instructor courses
-    const courses = await Course.find({ instructorId })
-      .select("title status")
-      .lean();
+    // 1️⃣ Instructor courses
+    const courses = await Course.find({ instructorId }).select("_id status");
+    const courseIds = courses.map(c => c._id);
 
-    // 2. Attach analytics per course
-    const analytics = await Promise.all(
-      courses.map(async (course) => {
-        const totalEnrollments = await Enrollment.countDocuments({
-          courseId: course._id
-        });
+    const totalCourses = courses.length;
+    const publishedCourses = courses.filter(
+      c => c.status === "published"
+    ).length;
 
-        const completedCount = await Progress.countDocuments({
-          courseId: course._id,
-          progressPercent: 100
-        });
+    // 2️⃣ Total students (distinct enrollments)
+    const totalStudents = await Enrollment.countDocuments({
+      courseId: { $in: courseIds }
+    });
 
-        const progressStats = await Progress.aggregate([
-          { $match: { courseId: course._id } },
-          { $group: { _id: null, avgProgress: { $avg: "$progressPercent" } } }
-        ]);
+    // 3️⃣ Quiz analytics
+    const progressDocs = await Progress.find({
+      courseId: { $in: courseIds },
+      "quizAttempts.0": { $exists: true }
+    });
 
-        return {
-          _id: course._id,
-          title: course.title,
-          status: course.status,
-          totalEnrollments,
-          completedCount,
-          averageProgress: Math.round(
-            progressStats[0]?.avgProgress || 0
-          )
-        };
-      })
-    );
+    let totalAttempts = 0;
+    let totalScore = 0;
+    let passedAttempts = 0;
 
-    res.status(200).json(analytics);
+    progressDocs.forEach(progress => {
+      progress.quizAttempts.forEach(attempt => {
+        totalAttempts++;
+        totalScore += attempt.score;
+        if (attempt.score >= 60) passedAttempts++;
+      });
+    });
+
+    const averageScore =
+      totalAttempts === 0
+        ? 0
+        : Math.round(totalScore / totalAttempts);
+
+    const passRate =
+      totalAttempts === 0
+        ? 0
+        : Math.round((passedAttempts / totalAttempts) * 100);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalCourses,
+        publishedCourses,
+        totalStudents,
+        quizAnalytics: {
+          totalAttempts,
+          averageScore,
+          passRate
+        }
+      }
+    });
 
   } catch (error) {
     console.error("INSTRUCTOR ANALYTICS ERROR:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
   }
 };

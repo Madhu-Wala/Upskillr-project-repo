@@ -8,75 +8,117 @@ import Lesson from "../models/Lesson.js";
  */
 export const completeLesson = async (req, res) => {
   try {
-    const { courseId, lessonId } = req.body;
     const userId = req.user._id;
+    const { courseId, lessonId } = req.body;
 
-    let progress = await Progress.findOne({ userId, courseId });
-
-    if (!progress) {
-      progress = await Progress.create({
-        userId,
-        courseId,
-        completedLessons: []
+    if (!courseId || !lessonId) {
+      return res.status(400).json({
+        message: "courseId and lessonId are required"
       });
     }
 
-    const alreadyCompleted = progress.completedLessons.some(
-      (id) => id.toString() === lessonId
-    );
+    // 1️⃣ Find progress (enrollment check)
+    let progress = await Progress.findOne({ userId, courseId });
 
-    if (!alreadyCompleted) {
+    if (!progress) {
+      return res.status(403).json({
+        message: "You are not enrolled in this course"
+      });
+    }
+
+    // 2️⃣ Prevent duplicate completion
+    if (!progress.completedLessons.includes(lessonId)) {
       progress.completedLessons.push(lessonId);
     }
 
+    // 3️⃣ Calculate progress %
     const totalLessons = await Lesson.countDocuments({ courseId });
 
-    if (totalLessons > 0) {
-      progress.progressPercent = Math.round(
-        (progress.completedLessons.length / totalLessons) * 100
-      );
-    } else {
-      progress.progressPercent = 0;
-    }
+    progress.progressPercent =
+      totalLessons === 0
+        ? 0
+        : Math.round(
+            (progress.completedLessons.length / totalLessons) * 100
+          );
 
+    // 4️⃣ Resume support
     progress.lastAccessedLessonId = lessonId;
     progress.lastAccessedAt = new Date();
 
+    // 5️⃣ Auto-complete course
     if (progress.progressPercent === 100) {
       progress.completedAt = new Date();
     }
 
     await progress.save();
 
-    res.status(200).json(progress);
+    res.status(200).json({
+      message: "Lesson marked as completed",
+      progress
+    });
+
   } catch (error) {
-    console.error("Complete lesson error:", error);
+    console.error("COMPLETE LESSON ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
 /**
  * @route   GET /api/progress/:courseId/resume
- * @desc    Resume last accessed lesson
- * @access  Private
+ * @desc    Resume next lesson for learner
+ * @access  Learner
  */
 export const resumeCourse = async (req, res) => {
   try {
-    const { courseId } = req.params;
     const userId = req.user._id;
+    const { courseId } = req.params;
 
-    const progress = await Progress.findOne({ userId, courseId })
-      .populate("lastAccessedLessonId");
+    // 1️⃣ Fetch progress
+    const progress = await Progress.findOne({ userId, courseId });
 
-    if (!progress || !progress.lastAccessedLessonId) {
+    // 2️⃣ Fetch all lessons in order
+    const lessons = await Lesson.find({ courseId })
+      .sort({ order: 1 })
+      .select("_id title order");
+
+    if (lessons.length === 0) {
       return res.status(404).json({
-        message: "No progress found for this course"
+        message: "No lessons found for this course"
       });
     }
 
-    res.status(200).json(progress.lastAccessedLessonId);
+    // 3️⃣ No progress → start from first lesson
+    if (!progress || progress.completedLessons.length === 0) {
+      return res.status(200).json({
+        resumeLesson: lessons[0],
+        status: "start"
+      });
+    }
+
+    // 4️⃣ All lessons completed
+    if (progress.completedLessons.length === lessons.length) {
+      return res.status(200).json({
+        status: "course_completed"
+      });
+    }
+
+    // 5️⃣ Resume next lesson
+    const lastLessonIndex = lessons.findIndex(
+      lesson =>
+        lesson._id.toString() ===
+        progress.lastAccessedLessonId?.toString()
+    );
+
+    const nextLesson =
+      lessons[lastLessonIndex + 1] || lessons[lessons.length - 1];
+
+    return res.status(200).json({
+      resumeLesson: nextLesson,
+      status: "resume"
+    });
+
   } catch (error) {
-    console.error("Resume course error:", error);
+    console.error("RESUME COURSE ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

@@ -10,16 +10,17 @@ export const createLesson = async (req, res) => {
   try {
     const instructorId = req.user._id;
     const { courseId } = req.params;
-    const { title, videoURL, order, resources } = req.body;
+    const { title, videoURL, contentMarkdown, resources } = req.body;
 
-    // 🔍 Validate input
-    if (!title || !videoURL || order === undefined) {
+    // 1️⃣ Validate input
+    if (!title || !videoURL) {
       return res.status(400).json({
-        message: "title, videoURL and order are required"
+        success: false,
+        message: "title and videoURL are required"
       });
     }
 
-    // 🔍 Verify course ownership
+    // 2️⃣ Verify course ownership
     const course = await Course.findOne({
       _id: courseId,
       instructorId
@@ -27,114 +28,191 @@ export const createLesson = async (req, res) => {
 
     if (!course) {
       return res.status(403).json({
+        success: false,
         message: "You do not own this course"
       });
     }
 
-    // ✅ Create lesson
+    // 3️⃣ Auto-generate lesson order
+    const lessonCount = await Lesson.countDocuments({ courseId });
+    const order = lessonCount + 1;
+
+    // 4️⃣ Create lesson
     const lesson = await Lesson.create({
       courseId,
       title,
       videoURL,
+      contentMarkdown,
       order,
       resources: resources || []
     });
 
-    // ✅ Safe increment
-    course.lessonsCount = (course.lessonsCount || 0) + 1;
+    // 5️⃣ Increment lessons count safely
+    course.lessonsCount = lessonCount + 1;
     await course.save();
 
-    res.status(201).json(lesson);
+    return res.status(201).json({
+      success: true,
+      data: lesson,
+      message: "Lesson created successfully"
+    });
 
   } catch (error) {
-    console.error("CREATE LESSON ERROR FULL:", error);
-    res.status(500).json({
-      message: error.message
+    console.error("CREATE LESSON ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
     });
   }
 };
 
 /**
- * @route PUT /api/instructor/lessons/:lessonId
- * @desc Update a lesson
- * @access Instructor
+ * @route   PUT /api/instructor/lessons/:lessonId
+ * @desc    Update a lesson
+ * @access  Instructor
  */
-
-export const updateLesson = async(req,res) => {
-  try{
+export const updateLesson = async (req, res) => {
+  try {
     const instructorId = req.user._id;
     const { lessonId } = req.params;
-    const { title, videoURL, order, resources} = req.body;
+    const { title, videoURL, contentMarkdown, resources } = req.body;
 
-    //1. Find Lesson  
+    // 1️⃣ Find lesson
     const lesson = await Lesson.findById(lessonId);
-    if(!lesson){
-      return res.status(404).json({message:"Lesson Not Found!"});
+    if (!lesson) {
+      return res.status(404).json({
+        success: false,
+        message: "Lesson not found"
+      });
     }
 
-    // 2. Verify Course Ownership
+    // 2️⃣ Verify course ownership
     const course = await Course.findOne({
       _id: lesson.courseId,
       instructorId
     });
-    
-    if(!course){
-      return res.status(403).json({message:"You do not own this course!"});
+
+    if (!course) {
+      return res.status(403).json({
+        success: false,
+        message: "You do not own this course"
+      });
     }
 
-    //3.Update fields safely
-    if(title !== undefined) lesson.title = title;
-    if(videoURL !== undefined) lesson.videoURL = videoURL;
-    if(order !== undefined) lesson.order = order;
-    if(resources !== undefined) lesson.resources = resources;
+    // 3️⃣ Update fields safely
+    if (title !== undefined) lesson.title = title;
+    if (videoURL !== undefined) lesson.videoURL = videoURL;
+    if (contentMarkdown !== undefined) lesson.contentMarkdown = contentMarkdown;
+    if (resources !== undefined) lesson.resources = resources;
 
     await lesson.save();
-    res.status(200).json(lesson);
 
-  }catch(error){
-    console.error("UPDATE LESSON ERROR: ",error);
-    res.status(500).json({message:"Server error"});
+    return res.status(200).json({
+      success: true,
+      data: lesson,
+      message: "Lesson updated successfully"
+    });
+
+  } catch (error) {
+    console.error("UPDATE LESSON ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
   }
 };
 
 /**
- * @route DELETE /api/instructor/lessons/:lessonId
- * @desc Delete a Lesson
- * @access Instructor
+ * @route   DELETE /api/instructor/lessons/:lessonId
+ * @desc    Delete a lesson
+ * @access  Instructor
  */
-
-export const deleteLesson = async(req,res) => {
-  try{
+export const deleteLesson = async (req, res) => {
+  try {
     const instructorId = req.user._id;
     const { lessonId } = req.params;
 
-    //1. Find Lesson
+    // 1️⃣ Find lesson
     const lesson = await Lesson.findById(lessonId);
-    if(!lesson){
-      return res.status(404).json({message:"Lesson Not Found!"});
+    if (!lesson) {
+      return res.status(404).json({
+        success: false,
+        message: "Lesson not found"
+      });
     }
 
-    // 2. Verify Course Ownership
+    // 2️⃣ Verify course ownership
     const course = await Course.findOne({
       _id: lesson.courseId,
       instructorId
     });
-    
-    if(!course){
-      return res.status(403).json({message:"You do not own this course!"});
+
+    if (!course) {
+      return res.status(403).json({
+        success: false,
+        message: "You do not own this course"
+      });
     }
 
-    //3. Delete a Lesson
+    // 3️⃣ Delete lesson
     await Lesson.findByIdAndDelete(lessonId);
 
-    //4. Decrement lessonCount safely
-    course.lessonsCount = Math.max((course.lessonsCount || 1) -1, 0);
+    // 4️⃣ Decrement lessons count safely
+    course.lessonsCount = Math.max((course.lessonsCount || 1) - 1, 0);
     await course.save();
 
-    return res.status(200).json({message:"Lesson deleted successfully!"});
+    return res.status(200).json({
+      success: true,
+      message: "Lesson deleted successfully"
+    });
 
-  }catch(error){
-    console.error("DELETE LESSON ERROR: ",error);
-    res.status(500).json({message:"Server error"});
+  } catch (error) {
+    console.error("DELETE LESSON ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
+/**
+ * @route   GET /api/instructor/courses/:courseId/lessons
+ * @desc    Get all lessons for instructor's course
+ * @access  Instructor
+ */
+export const getInstructorCourseLessons = async (req, res) => {
+  try {
+    const instructorId = req.user._id;
+    const { courseId } = req.params;
+
+    // 1️⃣ Verify instructor owns the course
+    const course = await Course.findOne({
+      _id: courseId,
+      instructorId
+    });
+
+    if (!course) {
+      return res.status(403).json({
+        success: false,
+        message: "You do not own this course"
+      });
+    }
+
+    // 2️⃣ Fetch lessons ordered correctly
+    const lessons = await Lesson.find({ courseId })
+      .sort({ order: 1 })
+      .select("-__v");
+
+    return res.status(200).json({
+      success: true,
+      data: lessons
+    });
+
+  } catch (error) {
+    console.error("GET INSTRUCTOR LESSONS ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
   }
 };

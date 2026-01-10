@@ -1,5 +1,6 @@
 import Enrollment from "../models/Enrollment.js";
 import Course from "../models/Course.js";
+import Progress from "../models/Progress.js";
 
 /**
  * @route   POST /api/enrollments/:courseId
@@ -8,36 +9,38 @@ import Course from "../models/Course.js";
  */
 export const enrollInCourse = async (req, res) => {
   try {
-    const userId = req.user._id; // from JWT middleware
+    const userId = req.user._id;
     const { courseId } = req.params;
 
-    // 1. Check if course exists & is published
+    // 1️⃣ Check course exists & is published
     const course = await Course.findOne({
       _id: courseId,
       status: "published"
     });
 
     if (!course) {
-      return res.status(404).json({ message: "Course not found or unpublished" });
+      return res.status(404).json({ message: "Course not found" });
     }
 
-    // 2. Prevent duplicate enrollment
-    const existingEnrollment = await Enrollment.findOne({
+    // 2️⃣ Prevent duplicate enrollment
+    const alreadyEnrolled = await Enrollment.findOne({ userId, courseId });
+    if (alreadyEnrolled) {
+      return res.status(400).json({ message: "Already enrolled" });
+    }
+
+    // 3️⃣ Create enrollment
+    const enrollment = await Enrollment.create({
       userId,
       courseId
     });
 
-    if (existingEnrollment) {
-      return res.status(400).json({
-        message: "Already enrolled in this course"
-      });
-    }
-
-    // 3. Create enrollment
-    const enrollment = await Enrollment.create({
+    // 4️⃣ ✅ CREATE PROGRESS (THIS FIXES YOUR ISSUE)
+    await Progress.create({
       userId,
       courseId,
-      status: "in-progress"
+      completedLessons: [],
+      quizAttempts: [],
+      progressPercent: 0
     });
 
     res.status(201).json({
