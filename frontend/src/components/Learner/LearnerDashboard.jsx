@@ -46,7 +46,7 @@ const LearnerDashboard = () => {
     if (storedUser) {
       // 2. Parse it back into a JavaScript object
       const userData = JSON.parse(storedUser);
-      // console.log("User Data:", userData); we got only name and role
+      // console.log("User Data:", userData); we got only name and role7
       // 3. Set the name to state
       setUserName(userData.name);
       

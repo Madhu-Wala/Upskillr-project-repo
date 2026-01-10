@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Eye, EyeOff, UserPlus, BookOpen, CheckCircle,Loader2 } from 'lucide-react';
-import axios from 'axios';
-
+import API from '../api/axios';
 const Signup = () => {
 
   const navigate=useNavigate();
@@ -30,7 +29,7 @@ const Signup = () => {
 
     try{
       // 1. Hit the register API
-      const response = await axios.post("http://localhost:5000/api/auth/register", {
+      const response = await API.post("/api/auth/register", {
         name,
         email,
         password,

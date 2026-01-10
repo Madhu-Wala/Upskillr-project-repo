@@ -1,16 +1,33 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import { Link } from "react-router-dom";
 import { GraduationCap, Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
-
+import API from "../api/axios";
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = (e) => {
+  const [loading,setLoading]=useState(false);
+  const [error,setError]=useState("");
+
+  const handleSubmit = async(e) => {
     e.preventDefault();
-    // Add your password reset logic here (e.g., Firebase, Auth0, or custom API)
-    console.log("Reset link sent to:", email);
-    setIsSubmitted(true);
+    setLoading(true);
+    setError("");
+    try {
+      // 1. Hit the backend route your team added
+      const response = await API.post("/api/auth/forgot-password", { 
+        email 
+      });
+
+      // 2. If successful, show the success state
+      console.log(response.data.message);
+      setIsSubmitted(true);
+    } catch (err) {
+      // 3. Handle errors (like email not found or server down)
+      setError(err.response?.data?.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,7 +50,11 @@ const ForgotPassword = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-10 px-8 shadow-2xl shadow-gray-200/50 rounded-[2.5rem] border border-gray-100">
-          
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold border border-red-100">
+              {error}
+            </div>
+          )}
           {!isSubmitted ? (
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
@@ -48,7 +69,7 @@ const ForgotPassword = () => {
                     id="email"
                     name="email"
                     type="email"
-                    required
+                    required disabled={loading}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="block w-full pl-11 pr-4 py-3.5 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all sm:text-sm"
@@ -59,10 +80,17 @@ const ForgotPassword = () => {
 
               <div>
                 <button
-                  type="submit"
+                  type="submit" disabled={loading}
                   className="w-full flex justify-center py-4 px-4 border border-transparent rounded-2xl shadow-lg shadow-indigo-100 text-sm font-black text-white bg-indigo-600 hover:bg-indigo-700 hover:scale-[1.02] transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  Reset Password
+                 {loading ? (
+                    <>
+                      <Loader2 className="animate-spin mr-2 h-5 w-5" />
+                      Sending...
+                    </>
+                  ) : (
+                    "Reset Password"
+                  )}
                 </button>
               </div>
             </form>
