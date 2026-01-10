@@ -6,6 +6,8 @@ import EnrolledCourseCard from './EnrolledCourseCard';
 import AchievementRow from './AchievementRow';
 import RecommendationCard from './RecommendationCard';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useEffect } from 'react';
 
 
 // --- 1. GLOBAL STYLING CONFIG (THEMES) ---
@@ -35,6 +37,22 @@ const THEME_CONFIG = {
 };
 
 const LearnerDashboard = () => {
+
+  const [userName, setUserName] = useState("Learner");
+  useEffect(()=>{
+    // 1. Get the string from localStorage
+    const storedUser = localStorage.getItem("user");
+    
+    if (storedUser) {
+      // 2. Parse it back into a JavaScript object
+      const userData = JSON.parse(storedUser);
+      // console.log("User Data:", userData); we got only name and role
+      // 3. Set the name to state
+      setUserName(userData.name);
+      
+    }
+  },[])
+
     const nav=useNavigate();
     //mock data, we have to fetch it from backend and model it in this format
   // Imagine these individual objects are fetched from different API endpoints, avatar can be some default image like user icon
@@ -79,7 +97,7 @@ const LearnerDashboard = () => {
       
       <div className="max-w-7xl mx-auto px-6 py-10">
         <header className="mb-10">
-          <h1 className="text-3xl font-bold text-gray-800">Welcome back, {userProfile.name}!</h1>
+          <h1 className="text-3xl font-bold text-gray-800">Welcome back, {userName}!</h1>
           <p className="text-gray-400">Continue your learning journey today</p>
         </header>
 

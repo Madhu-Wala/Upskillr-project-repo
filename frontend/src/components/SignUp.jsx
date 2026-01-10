@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { User, Mail, Eye, EyeOff, UserPlus, BookOpen, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User, Mail, Eye, EyeOff, UserPlus, BookOpen, CheckCircle,Loader2 } from 'lucide-react';
+import axios from 'axios';
 
 const Signup = () => {
+
+  const navigate=useNavigate();
   // State for password visibility and selected role
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);

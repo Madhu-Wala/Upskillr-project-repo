@@ -5,10 +5,12 @@ import { BookOpen, Bell, LogOut, Search, Menu, X } from 'lucide-react';
 function NavLearner() {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isLoggedIn = !!localStorage.getItem("token");
 
   function handleSignOut() {
     // Add sign-out logic here
-    navigate('/');
+    localStorage.clear();
+    navigate('/login');
   }
 
   // Matching the cleaner UpSkillr styling

@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Eye, EyeOff, LogIn } from 'lucide-react';
+import { Mail, Eye, EyeOff, LogIn,Loader2 } from 'lucide-react';
 import axios from 'axios';
-import { set } from 'mongoose';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
