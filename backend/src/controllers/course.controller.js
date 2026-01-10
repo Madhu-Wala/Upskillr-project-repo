@@ -9,8 +9,15 @@ export const getAllCourses = async (req, res) => {
   try {
     const count = await Course.countDocuments();
     console.log("COURSES COUNT:", count);
+// Fetch category from query parameters
+    const { category } = req.query;
+    let query = { status: "published" };
 
-    const courses = await Course.find({ status: "published" })
+    if (category && category !== "All Categories") {
+      query.category = category;
+    }
+// Fetch courses from the database based on the query
+    const courses = await Course.find(query)
       .populate("instructorId", "name");
 
     console.log("COURSES FOUND:", courses);

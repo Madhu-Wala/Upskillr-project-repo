@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { act, useEffect, useState } from 'react';
 import { 
   Search, Bell, BookOpen, LogOut, Filter, 
-  ChevronDown, ChevronLeft, ChevronRight 
+  ChevronDown, ChevronLeft, ChevronRight ,Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import CourseCard from './CourseCard';
+import API from '../../api/axios';
 
 const THEME_GRADIENTS = [
   "from-indigo-500 to-purple-500",
@@ -16,9 +17,28 @@ const THEME_GRADIENTS = [
 
 function Browse() {
   const [activeCategory, setActiveCategory] = useState('All Categories');
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const categories = ['All Categories', 'Development', 'Design', 'Business', 'Marketing', 'Data Science'];
+  const categories = ['All Categories', 'Programming', 'Frontend', 'Design', 'Business', 'Marketing', 'Data Science'];
+
+  useEffect(()=>{
+    const getCourses=async()=>{
+      setLoading(true);
+      try{
+        const response=await API.get('/api/courses', {
+          params:{category: activeCategory}
+        });
+        setCourses(response.data);
+      }catch(error){
+        console.error("Error fetching courses:", error);
+      }finally{
+        setLoading(false);
+      }
+    };
+    getCourses();
+  },[activeCategory]);// Re-runs whenever the user clicks a new category
 
   const courseData = [
     { id: 1, title: "Complete React Development Bootcamp", instructor: "Sarah Johnson", rating: 4.8, students: 2341,  thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=400&auto=format&fit=crop" },
@@ -66,7 +86,7 @@ function Browse() {
         </section>
 
         {/* Course Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {courseData.map((course, index) => (
             <CourseCard 
               key={course.id} 
@@ -74,8 +94,33 @@ function Browse() {
               fallbackGradient={THEME_GRADIENTS[index % THEME_GRADIENTS.length]}
             />
           ))}
+        </div> */}
+        {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="animate-spin text-indigo-600 w-12 h-12" />
         </div>
-
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {courses.map((course, index) => (
+            <CourseCard 
+              key={course._id} 
+              course={{
+                ...course,
+                // Map backend 'instructorId.name' to 'instructor' for the Card
+                instructor: course.instructorId?.name || "Instructor",
+                id: course._id
+              }} 
+              fallbackGradient={THEME_GRADIENTS[index % THEME_GRADIENTS.length]}
+            />
+          ))}
+          {!loading && courses.length === 0 && (
+        <div className="text-center py-20 text-gray-400 font-medium">
+          No courses found in this category.
+        </div>
+      )}
+        </div>
+      )
+      }
         
       </div>
     </div>
