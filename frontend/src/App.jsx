@@ -2,7 +2,8 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 // Auth & Landing
 import Login from "./components/Login";
-import Signup from "./components/Signup";
+import Signup from "./components/SignUp";
+import ForgotPassword from "./components/ForgotPassword";
 import Landing from "./components/Landing";
 
 // Learner Components
@@ -84,6 +85,7 @@ const dummyQuestions = [
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* LEARNER ROUTES */}
         <Route path="/Learner" element={<LearnerLayout />} >

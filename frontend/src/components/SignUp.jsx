@@ -6,7 +6,51 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState('learner');
+  const [name,setName]=useState("");
+  const [email,setEmail]=useState("");
+  const [password,setPassword]=useState("");
+  const [confirmPassword,setConfirmPassword]=useState("");
 
+  const [loading , setLoading] = useState(false);
+  const [error , setError] = useState("");
+
+  const handleSubmit=async (e)=>{
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    if (password!==confirmPassword){
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    try{
+      // 1. Hit the register API
+      const response = await axios.post("http://localhost:5000/api/auth/register", {
+        name,
+        email,
+        password,
+        role: selectedRole
+      });
+
+      const { token, role, name: userName } = response.data;
+      // 2. Save auth data
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify({ name: userName, role }));
+
+      // 3. Redirect to respective dashboard
+      if (role === 'instructor') {
+        navigate("/Instructor");
+      } else {
+        navigate("/Learner");
+      }
+      
+    } catch (err) {
+      setError(err.response?.data?.message || "Signup failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center bg-slate-50 overflow-hidden font-sans">
       
@@ -34,9 +78,13 @@ const Signup = () => {
             Start your upskilling journey today
           </p>
         </div>
-
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-semibold">
+            {error}
+          </div>
+        )}
         {/* Form */}
-        <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-4" onSubmit={handleSubmit}>
           
           {/* Full Name Field */}
           <div>
@@ -45,7 +93,9 @@ const Signup = () => {
             </label>
             <div className="relative group">
               <input
-                type="text"
+                type="text" value={name}
+                onChange={(e)=>setName(e.target.value)}
+                required disabled={loading}
                 placeholder="Enter your full name"
                 className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-gray-400 text-gray-700 pr-10"
               />
@@ -60,7 +110,9 @@ const Signup = () => {
             </label>
             <div className="relative group">
               <input
-                type="email"
+                type="email" value={email}
+                onChange={(e)=>setEmail(e.target.value)}
+                required disabled={loading}
                 placeholder="Enter your email"
                 className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-gray-400 text-gray-700 pr-10"
               />
@@ -79,7 +131,7 @@ const Signup = () => {
                 return (
                   <button
                     key={role}
-                    type="button"
+                    type="button" disabled={loading}
                     onClick={() => setSelectedRole(role)}
                     className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                       isActive
@@ -106,7 +158,9 @@ const Signup = () => {
             </label>
             <div className="relative group">
               <input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? "text" : "password"} value={password}
+                onChange={(e)=>setPassword(e.target.value)}
+                required disabled={loading}
                 placeholder="Create a strong password"
                 className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-gray-400 text-gray-700 pr-10"
               />
@@ -127,8 +181,9 @@ const Signup = () => {
             </label>
             <div className="relative group">
               <input
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm your password"
+                type={showConfirmPassword ? "text" : "password"} value={confirmPassword}
+                onChange={(e)=>setConfirmPassword(e.target.value)}
+                placeholder="Confirm your password" disabled={loading}
                 className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-gray-400 text-gray-700 pr-10"
               />
               <button
@@ -143,11 +198,11 @@ const Signup = () => {
 
           {/* Create Account Button */}
           <button
-            type="submit"
+            type="submit" disabled={loading}
             className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-200 active:scale-[0.98] transition-all"
           >
-            <UserPlus className="w-5 h-5" />
-            Create Account
+            {loading ? <Loader2 className="animate-spin" /> : <UserPlus className="w-5 h-5" />}
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
 
           {/* Divider */}

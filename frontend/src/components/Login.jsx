@@ -1,10 +1,54 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Eye, EyeOff, LogIn } from 'lucide-react';
+import axios from 'axios';
+import { set } from 'mongoose';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const nav=useNavigate();
+
+  const [email,setEmail]=useState("");
+  const [password,setPassword]=useState("");
+
+  const handleSubmit=async (e)=>{
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    // Handle login logic here
+    try {
+      // 1. Send request to your backend controller login route
+      const response = await axios.post('http://localhost:5000/api/auth/login', {
+        email,
+        password
+      });
+
+      // 2. Extract user data and token from backend response
+      const { token, role, name } = response.data;
+
+      // 3. Store Token and User Info in LocalStorage (or Cookies)
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify({ name, role }));
+
+      // 4. Role-based Redirection
+      // if (role === 'admin') {
+      //   nav('/admin-dashboard');
+      // } 
+     if (role === 'instructor') {
+        nav('/Instructor');
+      } else {
+        nav('/Learner');
+      }
+
+    } catch (err) {
+      // Handle errors from the backend (401, 400, etc.)
+      setError(err.response?.data?.message || "Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center bg-slate-50 overflow-hidden font-sans">
@@ -35,8 +79,13 @@ const Login = () => {
         </div>
 
         {/* Form */}
-        <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-          
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          {/* Show Error Message if it exists */}
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-medium border border-red-100 animate-shake">
+              {error}
+            </div>
+          )}
           {/* Email Field */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">
@@ -44,7 +93,9 @@ const Login = () => {
             </label>
             <div className="relative group">
               <input
-                type="email"
+                type="email" value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required disabled={loading}
                 placeholder="Enter your email"
                 className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-gray-400 text-gray-700"
               />
@@ -60,7 +111,10 @@ const Login = () => {
             <div className="relative group">
               <input
                 type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
+                required disabled={loading}
                 className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-gray-400 text-gray-700"
               />
               <button
@@ -75,18 +129,22 @@ const Login = () => {
 
           {/* Forgot Password */}
           <div className="flex justify-end">
-            <a href="#" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
+            <a href="/forgot-password" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
               Forgot your password?
             </a>
           </div>
 
           {/* Sign In Button */}
           <button
-            type="submit"
+            type="submit" disabled={loading}
             className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-200 active:scale-[0.98] transition-all"
           >
-            <LogIn className="w-5 h-5" />
-            Sign In
+            {loading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <LogIn className="w-5 h-5" />
+            )}
+            {loading ? "Signing in..." : "Sign In"}
           </button>
 
           {/* Divider */}
@@ -116,7 +174,7 @@ const Login = () => {
         <div className="mt-8 text-center">
           <p className="text-gray-500 text-sm font-medium">
             Don't have an account?{' '}
-            <a href="#" className="text-indigo-600 font-bold hover:underline decoration-2 underline-offset-4">
+            <a href="/signup" className="text-indigo-600 font-bold hover:underline decoration-2 underline-offset-4">
               Sign up
             </a>
           </p>

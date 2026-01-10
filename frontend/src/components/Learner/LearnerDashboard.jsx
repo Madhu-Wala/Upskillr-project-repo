@@ -1,7 +1,5 @@
-import React, { use } from 'react';
-import { 
-  Search, Bell, Clock, BookOpen, Trophy, Flame, 
-   Star, Award, CheckCircle,LogOut
+import {  Clock, BookOpen, Trophy, Flame, 
+   Star, Award, CheckCircle
 } from 'lucide-react';
 import StatCard from './StatCard';
 import EnrolledCourseCard from './EnrolledCourseCard';
@@ -74,10 +72,7 @@ const LearnerDashboard = () => {
     { id: 310, title: "DevOps Fundamentals", level: "Advanced", duration: "19h", rating: 4.9 },
   ];
 
-  function handleSignOut(){
-    // Add sign-out logic here
-    nav('/');
-  }
+ 
 
   return (
     <div className="min-h-screen bg-slate-50 pb-12">
