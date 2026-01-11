@@ -2,7 +2,7 @@ import React from 'react';
 import { Star, User, BookOpen,ChevronRight } from 'lucide-react';
 import {useNavigate} from 'react-router-dom';
 
-const CourseCard = ({ course, fallbackGradient }) => {
+const CourseCard = ({ course, fallbackGradient,onQuickView }) => {
   const navigate=useNavigate();
   // MongoDB uses _id. We check for both just in case.
   const courseId = course._id || course.id;
@@ -11,7 +11,7 @@ const CourseCard = ({ course, fallbackGradient }) => {
   //   navigate(`/course/${courseId}`);
   // };
   return (
-    <div 
+    <div onClick={()=>onQuickView(course)}
     className="bg-white rounded-[2rem] border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group">
       {/* Thumbnail or Gradient Fallback */}
       <div className="h-48 w-full relative overflow-hidden">
@@ -52,9 +52,19 @@ const CourseCard = ({ course, fallbackGradient }) => {
 
         <div className="flex items-center justify-between pt-4 border-t border-gray-50">
           
-          <button className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all active:scale-95 shadow-lg shadow-indigo-100">
+          {/* <button className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all active:scale-95 shadow-lg shadow-indigo-100">
             Enroll
             
+          </button> */}
+          {/* Button also triggers the drawer for that "Quick View" feel */}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation(); // Important!
+              onQuickView(course);
+            }}
+            className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-100"
+          >
+            View Details
           </button>
         </div>
       </div>

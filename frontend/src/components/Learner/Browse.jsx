@@ -6,6 +6,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import CourseCard from './CourseCard';
 import API from '../../api/axios';
+import CourseDrawer from './CourseDrawer';
 
 const THEME_GRADIENTS = [
   "from-indigo-500 to-purple-500",
@@ -20,6 +21,8 @@ function Browse() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const categories = ['All Categories', 'Programming', 'Frontend', 'Design', 'Business', 'Marketing', 'Data Science'];
 
@@ -48,6 +51,18 @@ function Browse() {
     { id: 5, title: "Digital Marketing Strategy", instructor: "Alex Rodriguez", rating: 4.6, students: 1567, thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=400&auto=format&fit=crop" },
   ];
 
+  const handleEnroll = async (courseId) => {
+  setEnrollLoading(true);
+  try {
+    // Replace with your real enrollment endpoint
+    await API.post(`/api/courses/${courseId}/enroll`);
+    navigate(`/learn/${courseId}`); // Take them straight to the classroom
+  } catch (err) {
+    alert("Enrollment failed. Are you logged in?");
+  } finally {
+    setEnrollLoading(false);
+  }
+};
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
 
@@ -111,8 +126,19 @@ function Browse() {
                 id: course._id
               }} 
               fallbackGradient={THEME_GRADIENTS[index % THEME_GRADIENTS.length]}
+              onQuickView={(course)=>{
+                setSelectedCourse(course);
+                setIsDrawerOpen(true);
+              }}
             />
           ))}
+          {/* The Drawer sits here waiting to be opened */}
+    <CourseDrawer 
+      course={selectedCourse}
+      isOpen={isDrawerOpen}
+      onClose={() => setIsDrawerOpen(false)}
+      onEnroll={handleEnroll} // Function we discussed earlier
+    />
           {!loading && courses.length === 0 && (
         <div className="text-center py-20 text-gray-400 font-medium">
           No courses found in this category.
