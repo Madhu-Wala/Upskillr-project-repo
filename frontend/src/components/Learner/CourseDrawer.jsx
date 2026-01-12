@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, BookOpen, Clock, PlayCircle, ShieldCheck, Loader2 } from 'lucide-react';
 
-const CourseDrawer = ({ course, isOpen, onClose, onEnroll, loading }) => {
+const CourseDrawer = ({ course, isOpen, onClose, onEnroll, loading, enrolled }) => {
   if (!course) return null;
 
   return (
@@ -59,17 +59,30 @@ const CourseDrawer = ({ course, isOpen, onClose, onEnroll, loading }) => {
           {/* Footer CTA */}
           <div className="p-6 border-t border-gray-50">
             <button 
-              onClick={() => onEnroll(course._id)}
-              disabled={loading}
-              className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black shadow-xl shadow-indigo-100 flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-70"
+              onClick={() => !enrolled && onEnroll(course._id)}
+              disabled={loading || enrolled}
+              className={`w-full py-4 rounded-2xl font-black shadow-xl flex items-center justify-center gap-2 transition-all active:scale-95
+                ${enrolled 
+                  ? "bg-emerald-500 text-white shadow-emerald-100 cursor-default"
+                  : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-100"
+                }
+                disabled:opacity-70`}
             >
-              {loading ? <Loader2 className="animate-spin" /> : (
+              {loading ? (
+                <Loader2 className="animate-spin" />
+              ) : enrolled ? (
+                <>
+                  <ShieldCheck size={20} />
+                  Enrolled
+                </>
+              ) : (
                 <>
                   <ShieldCheck size={20} />
                   Confirm Enrollment
                 </>
               )}
             </button>
+
             <p className="text-center text-xs text-gray-400 mt-4 font-medium italic">
               Access starts immediately after clicking
             </p>

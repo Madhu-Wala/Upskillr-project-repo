@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
-  BookOpen, Search, Bell, LogOut
+  BookOpen, Search, Bell, LogOut, Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import API from "../../api/axios";
 
 // Import the child components
 import OngoingCard from './OngoingCard';
-import CompletedCard from './CompletedCard'; // Ensure this file exists
-import EmptyState from './EmptyState';       // Ensure this file exists
+import CompletedCard from './CompletedCard';
+import EmptyState from './EmptyState';
 
 const COURSE_THEMES = {
   gradients: [
@@ -21,65 +22,69 @@ const COURSE_THEMES = {
 
 function LearnerCourses() {
   const [activeTab, setActiveTab] = useState('ongoing');
-  const navigate = useNavigate(); // Corrected: variable name must match usage
+  const [ongoingCourses, setOngoingCourses] = useState([]);
+  const [completedCourses, setCompletedCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const ongoingCourses = [
-    { 
-      id: 1, 
-      title: "Advanced JavaScript Patterns", 
-      instructor: "Dr. Elena Smith", 
-      lessonsCompleted: 8, 
-      totalLessons: 24,
-      thumbnail: "https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?q=80&w=400&auto=format&fit=crop" 
-    },
-    { 
-      id: 2, 
-      title: "UI/UX Design Fundamentals", 
-      instructor: "Marcus Thorne", 
-      lessonsCompleted: 22, 
-      totalLessons: 30,
-      thumbnail: null 
-    },
-    { 
-      id: 3, 
-      title: "Database Design & SQL", 
-      instructor: "Sarah Jenkins", 
-      lessonsCompleted: 5, 
-      totalLessons: 18,
-      thumbnail: "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?q=80&w=400&auto=format&fit=crop"
-    },
-    {
-        id: 4,
-        title: "Machine Learning Basics",
-        instructor: "Dr. Alan Turing",
-        lessonsCompleted: 10,
-        totalLessons: 20,
-        thumbnail: null
-    },
-    {
-        id: 5,
-        title: "Introduction to Cybersecurity",
-        instructor: "Lisa Wong",
-        lessonsCompleted: 15,
-        totalLessons: 25,
-        thumbnail: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=400&auto=format&fit=crop"
-    }
-  ];
+  const navigate = useNavigate();
 
-  const completedCourses = [
-    { id: 101, title: "Introduction to React", completionDate: "Oct 12, 2025" },
-    { id: 102, title: "Tailwind CSS Mastery", completionDate: "Sep 28, 2025" }
-  ];
+  useEffect(() => {
+    const fetchMyCourses = async () => {
+      try {
+        const res = await API.get("/api/learners/my-courses");
+
+        const ongoing = [];
+        const completed = [];
+
+        res.data.forEach((item) => {
+          const totalLessons = item.lessonsCount || 0;
+
+            let lessonsCompleted = 0;
+            let safeProgress = 0;
+
+            if (totalLessons > 0) {
+              safeProgress = item.progressPercent || 0;
+              lessonsCompleted = Math.round((safeProgress / 100) * totalLessons);
+            }
+
+          const formatted = {
+            id: item._id,
+            title: item.title,
+            instructor: item.instructor,
+            lessonsCompleted,
+            totalLessons,
+            thumbnail: item.thumbnail,
+            progressPercent: safeProgress
+          };
+
+
+          if (item.completed) {
+            completed.push(formatted);
+          } else {
+            ongoing.push(formatted);
+          }
+        });
+
+        setOngoingCourses(ongoing);
+        setCompletedCourses(completed);
+
+      } catch (err) {
+        console.error("Failed to load courses", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMyCourses();
+  }, []);
 
   const handleSignOut = () => {
-    // Logic like localStorage.clear() goes here
-    navigate('/'); // Using the correct variable name
+    localStorage.clear();
+    navigate('/');
   };
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
-      
-
       <div className="max-w-7xl mx-auto px-6 py-10">
         <header className="mb-10">
           <h1 className="text-3xl font-bold text-gray-800 tracking-tight">My Courses</h1>
@@ -99,6 +104,7 @@ function LearnerCourses() {
               </span>
               {activeTab === 'ongoing' && <div className="absolute bottom-0 left-0 w-full h-1 bg-indigo-600 rounded-t-full" />}
             </button>
+
             <button 
               onClick={() => setActiveTab('completed')}
               className={`pb-4 text-sm font-bold transition-all relative ${activeTab === 'completed' ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}
@@ -113,13 +119,17 @@ function LearnerCourses() {
         </div>
 
         {/* Content Area */}
-        {activeTab === 'ongoing' ? (
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="animate-spin text-indigo-600 w-12 h-12" />
+          </div>
+        ) : activeTab === 'ongoing' ? (
           ongoingCourses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {ongoingCourses.map((course, index) => (
                 <OngoingCard 
-                  key={course.id} 
-                  course={course} 
+                  key={course.id}
+                  course={course}
                   themeColor={COURSE_THEMES.gradients[index % COURSE_THEMES.gradients.length]}
                 />
               ))}
