@@ -1,11 +1,11 @@
-import React, { act, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import API from "../../api/axios";
 import { 
   Search, Bell, BookOpen, LogOut, Filter, 
   ChevronDown, ChevronLeft, ChevronRight ,Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import CourseCard from './CourseCard';
-import API from '../../api/axios';
 import CourseDrawer from './CourseDrawer';
 
 const THEME_GRADIENTS = [
@@ -23,56 +23,70 @@ function Browse() {
   const navigate = useNavigate();
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
+  const [enrolledCourses, setEnrolledCourses] = useState(new Set());
 
   const categories = ['All Categories', 'Programming', 'Frontend', 'Design', 'Business', 'Marketing', 'Data Science'];
 
-  useEffect(()=>{
-    const getCourses=async()=>{
+  // 🔹 Load courses
+  useEffect(() => {
+    const getCourses = async () => {
       setLoading(true);
-      try{
-        const response=await API.get('/api/courses', {
-          params:{category: activeCategory}
+      try {
+        const response = await API.get('/api/courses', {
+          params: { category: activeCategory }
         });
         setCourses(response.data);
-      }catch(error){
+      } catch (error) {
         console.error("Error fetching courses:", error);
-      }finally{
+      } finally {
         setLoading(false);
       }
     };
     getCourses();
-  },[activeCategory]);// Re-runs whenever the user clicks a new category
+  }, [activeCategory]);
 
-  const courseData = [
-    { id: 1, title: "Complete React Development Bootcamp", instructor: "Sarah Johnson", rating: 4.8, students: 2341,  thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=400&auto=format&fit=crop" },
-    { id: 2, title: "UI/UX Design Masterclass", instructor: "Michael Chen", rating: 4.9, students: 1892, thumbnail: null }, // Falls back to gradient
-    { id: 3, title: "Data Science with Python", instructor: "Dr. Emma Wilson", rating: 4.7, students: 3156, thumbnail: "https://images.unsplash.com/photo-1551288049-bbbda536639a?q=80&w=400&auto=format&fit=crop" },
-    { id: 4, title: "Modern Web Security", instructor: "Mark Anderson", rating: 4.6, students: 987, thumbnail: null }, // Falls back to gradient
-    { id: 5, title: "Digital Marketing Strategy", instructor: "Alex Rodriguez", rating: 4.6, students: 1567, thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=400&auto=format&fit=crop" },
-  ];
+  // 🔹 Load enrolled courses for this learner
+  useEffect(() => {
+    const loadEnrollments = async () => {
+      try {
+        const res = await API.get("/api/learner/my-courses");
+        const ids = new Set(res.data.map(c => c.courseId._id));
+        setEnrolledCourses(ids);
+      } catch {
+        // Not logged in or no enrollments
+      }
+    };
+    loadEnrollments();
+  }, []);
 
+  // 🔹 Enroll
   const handleEnroll = async (courseId) => {
-  setEnrollLoading(true);
-  try {
-    // Replace with your real enrollment endpoint
-    await API.post(`/api/courses/${courseId}/enroll`);
-    navigate(`/learn/${courseId}`); // Take them straight to the classroom
-  } catch (err) {
-    alert("Enrollment failed. Are you logged in?");
-  } finally {
-    setEnrollLoading(false);
-  }
-};
+    try {
+      setEnrolling(true);
+
+      await API.post(`/api/enrollments/${courseId}`);
+
+      setEnrolledCourses(prev => new Set([...prev, courseId]));
+      setIsDrawerOpen(false);
+      
+    } catch (err) {
+      alert(err.response?.data?.message || "Enrollment failed");
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
-
       <div className="max-w-7xl mx-auto px-6 py-10">
         <header className="mb-10">
           <h1 className="text-4xl font-black text-gray-900 tracking-tight">Discover Courses</h1>
           <p className="text-gray-400 font-medium mt-2 text-lg">Enhance your skills with our extensive library</p>
         </header>
 
-        {/* Categories and Filters Bar */}
+        {/* Categories */}
         <section className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-12">
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {categories.map((cat) => (
@@ -89,65 +103,48 @@ function Browse() {
               </button>
             ))}
           </div>
-
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-100 rounded-xl text-sm font-bold text-gray-600 shadow-sm hover:bg-gray-50 transition-colors">
-              <Filter className="w-4 h-4" /> Filter
-            </button>
-            <button className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-100 rounded-xl text-sm font-bold text-gray-600 shadow-sm hover:bg-gray-50 transition-colors">
-              Sort by: Popular <ChevronDown className="w-4 h-4" />
-            </button>
-          </div>
         </section>
 
         {/* Course Grid */}
-        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-          {courseData.map((course, index) => (
-            <CourseCard 
-              key={course.id} 
-              course={course} 
-              fallbackGradient={THEME_GRADIENTS[index % THEME_GRADIENTS.length]}
-            />
-          ))}
-        </div> */}
         {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="animate-spin text-indigo-600 w-12 h-12" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {courses.map((course, index) => (
-            <CourseCard 
-              key={course._id} 
-              course={{
-                ...course,
-                // Map backend 'instructorId.name' to 'instructor' for the Card
-                instructor: course.instructorId?.name || "Instructor",
-                id: course._id
-              }} 
-              fallbackGradient={THEME_GRADIENTS[index % THEME_GRADIENTS.length]}
-              onQuickView={(course)=>{
-                setSelectedCourse(course);
-                setIsDrawerOpen(true);
-              }}
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="animate-spin text-indigo-600 w-12 h-12" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {courses.map((course, index) => (
+              <CourseCard 
+                key={course._id} 
+                course={{
+                  ...course,
+                  instructor: course.instructorId?.name || "Instructor",
+                  id: course._id,
+                  enrolled: enrolledCourses.has(course._id)
+                }} 
+                fallbackGradient={THEME_GRADIENTS[index % THEME_GRADIENTS.length]}
+                onQuickView={(course) => {
+                  setSelectedCourse(course);
+                  setIsDrawerOpen(true);
+                }}
+              />
+            ))}
+
+            <CourseDrawer 
+              course={selectedCourse}
+              isOpen={isDrawerOpen}
+              onClose={() => setIsDrawerOpen(false)}
+              onEnroll={handleEnroll}
+              loading={enrolling}
+              enrolled={enrolledCourses.has(selectedCourse?._id)}
             />
-          ))}
-          {/* The Drawer sits here waiting to be opened */}
-    <CourseDrawer 
-      course={selectedCourse}
-      isOpen={isDrawerOpen}
-      onClose={() => setIsDrawerOpen(false)}
-      onEnroll={handleEnroll} // Function we discussed earlier
-    />
-          {!loading && courses.length === 0 && (
-        <div className="text-center py-20 text-gray-400 font-medium">
-          No courses found in this category.
-        </div>
-      )}
-        </div>
-      )
-      }
-        
+
+            {!loading && courses.length === 0 && (
+              <div className="text-center py-20 text-gray-400 font-medium">
+                No courses found in this category.
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
