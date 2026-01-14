@@ -56,6 +56,18 @@ export const replaceCourseThumbnail = async (req, res) => {
   }
 };
 
+// DELETE THUMBNAIL
+export const deleteCourseThumbnail = async (req, res) => {
+  try {
+    await Course.findByIdAndUpdate(req.params.courseId, { thumbnail: "" });
+    // Note: If using Cloudinary/S3, you should also delete the file from their servers here
+    res.status(200).json({ success: true, message: "Thumbnail removed" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 /* ============================
    LESSON VIDEO
 ============================ */

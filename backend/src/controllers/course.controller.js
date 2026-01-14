@@ -53,3 +53,29 @@ export const getCourseById = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+export const getCourseThumbnail = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+
+    // Use .select() to only fetch the thumbnail field
+    const course = await Course.findById(courseId).select("thumbnail");
+
+    if (!course) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Course not found" 
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      thumbnail: course.thumbnail || "" // Return empty string if no thumbnail yet
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error fetching thumbnail",
+      error: error.message 
+    });
+  }
+};

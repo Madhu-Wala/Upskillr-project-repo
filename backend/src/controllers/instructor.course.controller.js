@@ -35,6 +35,42 @@ export const createCourse = async (req, res) => {
   }
 };
 
+// GET SINGLE COURSE
+export const getCourseById = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.courseId);
+    
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    res.status(200).json({ success: true, data: course });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// UPDATE COURSE
+export const updateCourse = async (req, res) => {
+  try {
+    const updatedCourse = await Course.findByIdAndUpdate(
+      req.params.courseId,
+      { $set: req.body }, // Updates only the fields sent in the request
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedCourse) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    res.status(200).json({ success: true, data: updatedCourse });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+
 /**
  * @route PUT /api/instructor/courses/:courseId/publish
  * @desc Publish a course
@@ -114,3 +150,4 @@ export const getInstructorCourses = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+

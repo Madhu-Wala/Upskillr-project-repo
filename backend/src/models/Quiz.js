@@ -53,10 +53,14 @@ const quizSchema = new mongoose.Schema(
       ref: "Lesson",
       required: true
     },
+    title: {
+      type: String,
+      required: true
+    },
 
     totalMarks: {
       type: Number,
-      default: 100
+      default: 10
     },
 
     questions: [
@@ -69,7 +73,8 @@ const quizSchema = new mongoose.Schema(
             isCorrect: Boolean
           }
         ],
-        explanation: String
+        explanation: String,
+        score: { type: Number, default: 0 }
       }
     ]
   },

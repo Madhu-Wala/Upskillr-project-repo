@@ -106,29 +106,59 @@ export const submitQuiz = async (req, res) => {
       });
     }
 
-    // 5️⃣ Evaluate quiz
-    let correctAnswers = 0;
+    // // 5️⃣ Evaluate quiz
+    // let correctAnswers = 0;
+
+    // quiz.questions.forEach((question, index) => {
+    //   const answer = answers.find(a => a.questionIndex === index);
+    //   if (!answer) return;
+
+    //   const selectedOption =
+    //     question.options[answer.selectedOptionIndex];
+
+    //   if (selectedOption && selectedOption.isCorrect) {
+    //     correctAnswers++;
+    //   }
+    // });
+
+    // const percentage = Math.round(
+    //   (correctAnswers / totalQuestions) * 100
+    // );
+
+    // // 6️⃣ Save quiz attempt
+    // progress.quizAttempts.push({
+    //   quizId,
+    //   score: percentage,
+    //   attemptedAt: new Date()
+    // });
+
+    // 5️⃣ Evaluate quiz using dynamic scores
+    let userScore = 0;
+    let maxPossibleScore = 0;
 
     quiz.questions.forEach((question, index) => {
+      maxPossibleScore += (question.score || 0);
+      
       const answer = answers.find(a => a.questionIndex === index);
       if (!answer) return;
 
-      const selectedOption =
-        question.options[answer.selectedOptionIndex];
+      const selectedOption = question.options[answer.selectedOptionIndex];
 
       if (selectedOption && selectedOption.isCorrect) {
-        correctAnswers++;
+        userScore += (question.score || 0);
       }
     });
 
-    const percentage = Math.round(
-      (correctAnswers / totalQuestions) * 100
-    );
+    // Calculate percentage based on total marks assigned
+    const percentage = maxPossibleScore > 0 
+      ? Math.round((userScore / maxPossibleScore) * 100) 
+      : 0;
 
     // 6️⃣ Save quiz attempt
     progress.quizAttempts.push({
       quizId,
-      score: percentage,
+      score: userScore, // Storing actual points now
+      percentage: percentage,
       attemptedAt: new Date()
     });
 
