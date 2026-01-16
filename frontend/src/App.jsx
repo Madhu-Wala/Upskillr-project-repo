@@ -94,6 +94,7 @@ const dummyQuestions = [
           <Route index element={<LearnerDashboard />} />
           <Route path="my-courses" element={<LearnerCourses />} />
           <Route path="browse-courses" element={<Browse />} />
+          <Route path="courses/:courseId" element={<CoursePlayer />} />
           <Route path="course-dummy" element={<CoursePlayer />} />
           <Route path="quiz-dummy" element={<QuizPlayer 
             quiz={dummyQuiz} 

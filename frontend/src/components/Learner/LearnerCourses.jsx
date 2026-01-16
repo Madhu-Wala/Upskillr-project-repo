@@ -37,33 +37,23 @@ function LearnerCourses() {
         const completed = [];
 
         res.data.forEach((item) => {
-          const totalLessons = item.lessonsCount || 0;
-
-            let lessonsCompleted = 0;
-            let safeProgress = 0;
-
-            if (totalLessons > 0) {
-              safeProgress = item.progressPercent || 0;
-              lessonsCompleted = Math.round((safeProgress / 100) * totalLessons);
-            }
-
           const formatted = {
             id: item._id,
             title: item.title,
             instructor: item.instructor,
-            lessonsCompleted,
-            totalLessons,
+            lessonsCompleted: item.completedLessonsCount || 0,
+            totalLessons: item.lessonsCount || 0,
             thumbnail: item.thumbnail,
-            progressPercent: safeProgress
+            progressPercent: item.progressPercent || 0
           };
 
-
-          if (item.completed) {
+          if (item.completed === true) {
             completed.push(formatted);
           } else {
             ongoing.push(formatted);
           }
         });
+
 
         setOngoingCourses(ongoing);
         setCompletedCourses(completed);

@@ -1,5 +1,5 @@
 import Course from "../models/Course.js";
-
+import Enrollment from "../models/Enrollment.js";
 /**
  * @route   GET /api/courses
  * @desc    Get all published courses
@@ -79,3 +79,38 @@ export const getCourseThumbnail = async (req, res) => {
     });
   }
 };
+
+export const getRecommendedCourses = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // 1. Get enrolled course IDs
+    const enrolled = await Enrollment.find({ userId }).select("courseId");
+    const enrolledIds = enrolled.map(e => e.courseId.toString());
+
+    // 2. Fetch courses not enrolled + rating >= 4
+    const courses = await Course.find({
+      _id: { $nin: enrolledIds },
+      rating: { $gte: 4 }
+    })
+      .select("title thumbnail difficulty rating totalLessons")
+      .limit(8)
+      .lean();
+
+    // 3. Format
+    const formatted = courses.map(c => ({
+      _id: c._id,
+      title: c.title,
+      thumbnail: c.thumbnail?.url || null,
+      level: c.difficulty || "Beginner",
+      duration: `${c.totalLessons || 10}h`,
+      rating: Math.floor(c.rating || 4)   // whole number ⭐
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error("RECOMMENDED ERROR:", err);
+    res.status(500).json({ message: "Failed to load recommended courses" });
+  }
+};
+

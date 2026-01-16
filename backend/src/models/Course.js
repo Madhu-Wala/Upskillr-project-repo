@@ -14,7 +14,8 @@ const courseSchema = new mongoose.Schema(
     },
 
     thumbnail: {
-      type: String
+      url: String,
+      publicId: String
     },
 
     category: {

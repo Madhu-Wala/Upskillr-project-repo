@@ -4,7 +4,7 @@ import {
   PlayCircle, Star, ChevronRight, ChevronLeft, Plus,
   Layout, Award, CheckCircle
 } from 'lucide-react';
-const EnrolledCourseCard = ({ course, colorClass }) => (
+const EnrolledCourseCard = ({ course, colorClass, onClick }) => (
   <div className="bg-white p-5 rounded-2xl border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
     <div className={`w-14 h-14 rounded-xl ${colorClass} flex items-center justify-center text-white shrink-0`}>
       <PlayCircle className="w-8 h-8 opacity-80" />
@@ -12,7 +12,9 @@ const EnrolledCourseCard = ({ course, colorClass }) => (
     <div className="flex-1">
       <div className="flex justify-between items-start mb-1">
         <h4 className="font-bold text-gray-800">{course.title}</h4>
-        <button className="px-4 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700">
+        <button 
+        onClick={onClick}
+        className="px-4 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700">
           Continue
         </button>
       </div>

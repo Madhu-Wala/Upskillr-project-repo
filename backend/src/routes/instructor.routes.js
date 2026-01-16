@@ -29,6 +29,7 @@ import {
   replaceCourseThumbnail,deleteCourseThumbnail,
   uploadLessonVideo,
   replaceLessonVideo,
+  deleteLessonVideo,
   uploadLessonPDF,
   replaceLessonPDF,
   deleteLessonPDF
@@ -141,7 +142,9 @@ router.post(
    UPLOAD ROUTES
 ======================= */
 
-// Course Thumbnail
+// ===============================
+// COURSE THUMBNAIL
+// ===============================
 router.post(
   "/courses/:courseId/thumbnail",
   protect,
@@ -158,7 +161,6 @@ router.put(
   replaceCourseThumbnail
 );
 
-// DELETE route for removing thumbnail
 router.delete(
   "/courses/:courseId/thumbnail",
   protect,
@@ -166,12 +168,14 @@ router.delete(
   deleteCourseThumbnail
 );
 
-// Lesson Video
+// ===============================
+// LESSON VIDEO
+// ===============================
 router.post(
   "/lessons/:lessonId/video",
   protect,
   instructorOnly,
-  uploadMedia.single("file"),
+  uploadMedia.single("video"),     // 👈 MUST be "video"
   uploadLessonVideo
 );
 
@@ -179,34 +183,44 @@ router.put(
   "/lessons/:lessonId/video",
   protect,
   instructorOnly,
-  uploadMedia.single("file"),
+  uploadMedia.single("video"),     // 👈 MUST be "video"
   replaceLessonVideo
 );
 
-// Lesson PDF
+router.delete(
+  "/lessons/:lessonId/video",
+  protect,
+  instructorOnly,
+  deleteLessonVideo // Add this
+);
+
+
+// ===============================
+// LESSON PDF
+// ===============================
 router.post(
   "/lessons/:lessonId/pdf",
   protect,
   instructorOnly,
-  uploadPDF.single("file"),
+  uploadPDF.array("files", 5),   // 👈 multiple PDFs
   uploadLessonPDF
 );
 
 router.put(
-  "/lessons/:lessonId/pdf/:resourceIndex",
+  "/lessons/:lessonId/pdf/:resourceId",
   protect,
   instructorOnly,
-  uploadPDF.single("file"),
+  uploadPDF.single("file"),      // 👈 single replacement
   replaceLessonPDF
 );
 
-
 router.delete(
-  "/lessons/:lessonId/pdf/:resourceIndex",
+  "/lessons/:lessonId/pdf/:resourceId",
   protect,
   instructorOnly,
   deleteLessonPDF
 );
+
 //quiz diagram image
 router.post(
   "/upload-misc",

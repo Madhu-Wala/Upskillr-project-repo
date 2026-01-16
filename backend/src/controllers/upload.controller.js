@@ -2,7 +2,6 @@ import Course from "../models/Course.js";
 import Lesson from "../models/Lesson.js";
 import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
-import { extractPublicId } from "../utils/cloudinary.util.js";
 import { deleteFromCloudinary } from "../services/cloudinary.service.js";
 
 /* ============================
@@ -11,59 +10,92 @@ import { deleteFromCloudinary } from "../services/cloudinary.service.js";
 
 export const uploadCourseThumbnail = async (req, res) => {
   try {
-    const instructorId = req.user._id;
     const { courseId } = req.params;
+    const instructorId = req.user._id;
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
 
     const course = await Course.findOne({ _id: courseId, instructorId });
     if (!course) return res.status(403).json({ message: "Unauthorized" });
 
-    course.thumbnail = req.file.path;
+    course.thumbnail = {
+      url: req.file.path,
+      publicId: req.file.filename // Cloudinary public_id
+    };
+
     await course.save();
 
     res.json({
       message: "Thumbnail uploaded",
       thumbnail: course.thumbnail
     });
+
   } catch (err) {
-    console.error(err);
+    console.error("UPLOAD THUMBNAIL ERROR:", err);
     res.status(500).json({ message: "Upload failed" });
   }
 };
 
+
 export const replaceCourseThumbnail = async (req, res) => {
   try {
-    const instructorId = req.user._id;
     const { courseId } = req.params;
+    const instructorId = req.user._id;
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
 
     const course = await Course.findOne({ _id: courseId, instructorId });
     if (!course) return res.status(403).json({ message: "Unauthorized" });
 
-    if (course.thumbnail) {
-      const publicId = extractPublicId(course.thumbnail);
-      await deleteFromCloudinary(publicId, "image");
+    // 🔥 Delete old thumbnail
+    if (course.thumbnail?.publicId) {
+      await deleteFromCloudinary(course.thumbnail.publicId, "image");
     }
 
-    course.thumbnail = req.file.path;
+    // ✅ Save new one
+    course.thumbnail = {
+      url: req.file.path,
+      publicId: req.file.filename
+    };
+
     await course.save();
 
     res.json({
       message: "Thumbnail replaced",
       thumbnail: course.thumbnail
     });
+
   } catch (err) {
-    console.error(err);
+    console.error("REPLACE THUMBNAIL ERROR:", err);
     res.status(500).json({ message: "Replace failed" });
   }
 };
 
-// DELETE THUMBNAIL
+
 export const deleteCourseThumbnail = async (req, res) => {
   try {
-    await Course.findByIdAndUpdate(req.params.courseId, { thumbnail: "" });
-    // Note: If using Cloudinary/S3, you should also delete the file from their servers here
-    res.status(200).json({ success: true, message: "Thumbnail removed" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    const { courseId } = req.params;
+    const instructorId = req.user._id;
+
+    const course = await Course.findOne({ _id: courseId, instructorId });
+    if (!course) return res.status(403).json({ message: "Unauthorized" });
+
+    if (course.thumbnail?.publicId) {
+      await deleteFromCloudinary(course.thumbnail.publicId, "image");
+    }
+
+    course.thumbnail = undefined;
+    await course.save();
+
+    res.json({ message: "Thumbnail deleted" });
+
+  } catch (err) {
+    console.error("DELETE THUMBNAIL ERROR:", err);
+    res.status(500).json({ message: "Delete failed" });
   }
 };
 
@@ -74,30 +106,33 @@ export const deleteCourseThumbnail = async (req, res) => {
 
 export const uploadLessonVideo = async (req, res) => {
   try {
-    const instructorId = req.user._id;
     const { lessonId } = req.params;
+    const instructorId = req.user._id;
 
     const lesson = await Lesson.findById(lessonId);
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
 
-    const course = await Course.findOne({
-      _id: lesson.courseId,
-      instructorId
-    });
+    const course = await Course.findOne({ _id: lesson.courseId, instructorId });
     if (!course) return res.status(403).json({ message: "Unauthorized" });
 
-    lesson.videoURL = req.file.path;
+    lesson.video = {
+      url: req.file.path,
+      publicId: req.file.filename
+    };
+
     await lesson.save();
 
     res.json({
       message: "Video uploaded",
-      videoURL: lesson.videoURL
+      video: lesson.video
     });
+
   } catch (err) {
-    console.error(err);
+    console.error("UPLOAD VIDEO ERROR:", err);
     res.status(500).json({ message: "Upload failed" });
   }
 };
+
 
 export const replaceLessonVideo = async (req, res) => {
   try {
@@ -106,26 +141,74 @@ export const replaceLessonVideo = async (req, res) => {
     const lesson = await Lesson.findById(lessonId);
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
 
-    if (lesson.videoURL) {
-      const publicId = extractPublicId(lesson.videoURL);
-      await deleteFromCloudinary(publicId, "video");
+    if (lesson.video?.publicId) {
+      await deleteFromCloudinary(lesson.video.publicId, "video");
     }
 
-    lesson.videoURL = req.file.path;
+    lesson.video = {
+      url: req.file.path,
+      publicId: req.file.filename
+    };
+
     await lesson.save();
 
     res.json({
       message: "Video replaced",
-      videoURL: lesson.videoURL
+      video: lesson.video
     });
+
   } catch (err) {
-    console.error(err);
+    console.error("REPLACE VIDEO ERROR:", err);
     res.status(500).json({ message: "Replace failed" });
   }
 };
 
+export const deleteLessonVideo = async (req, res) => {
+  try {
+    const { lessonId } = req.params;
+    const instructorId = req.user._id;
+
+    // 1. Find lesson
+    const lesson = await Lesson.findById(lessonId);
+    if (!lesson) {
+      return res.status(404).json({ message: "Lesson not found" });
+    }
+
+    // 2. Ensure instructor owns the course
+    const course = await Course.findOne({
+      _id: lesson.courseId,
+      instructorId
+    });
+    if (!course) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    // 3. If no video exists
+    if (!lesson.video || !lesson.video.publicId) {
+      return res.status(400).json({ message: "No video to delete" });
+    }
+
+    // 4. Delete video from Cloudinary
+    await deleteFromCloudinary(lesson.video.publicId, "video");
+
+    // 5. Remove video from lesson
+    lesson.video = null;
+    await lesson.save();
+
+    res.json({
+      message: "Video deleted successfully"
+    });
+
+  } catch (err) {
+    console.error("DELETE VIDEO ERROR:", err);
+    res.status(500).json({ message: "Delete failed" });
+  }
+};
+
+
+
 /* ============================
-   LESSON PDF (STREAM UPLOAD)
+   LESSON PDF
 ============================ */
 
 export const uploadLessonPDF = async (req, res) => {
@@ -135,111 +218,93 @@ export const uploadLessonPDF = async (req, res) => {
     const lesson = await Lesson.findById(lessonId);
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
 
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: "upskillr/pdfs",
-        resource_type: "raw"
-      },
-      async (error, result) => {
-        if (error) {
-          console.error(error);
-          return res.status(500).json({ message: "Cloudinary upload failed" });
-        }
+    // supports single or multiple PDFs
+    const files = req.files || [req.file];
 
-        lesson.resources.push({
-          name: req.file.originalname,
-          url: result.secure_url,
-          publicId: result.public_id
-        });
+    files.forEach(file => {
+      lesson.resources.push({
+        name: file.originalname,
+        url: file.path,
+        publicId: file.filename
+      });
+    });
 
-        await lesson.save();
+    await lesson.save();
 
-        res.json({
-          message: "PDF uploaded",
-          resource: lesson.resources.at(-1)
-        });
-      }
-    );
+    res.json({
+      message: "PDFs uploaded",
+      resources: lesson.resources
+    });
 
-    streamifier.createReadStream(req.file.buffer).pipe(stream);
   } catch (err) {
-    console.error(err);
+    console.error("UPLOAD PDF ERROR:", err);
     res.status(500).json({ message: "Upload failed" });
   }
 };
 
+
+
+
 export const replaceLessonPDF = async (req, res) => {
   try {
-    const { lessonId, resourceIndex } = req.params;
-
-    const lesson = await Lesson.findById(lessonId);
-    if (!lesson) {
-      return res.status(404).json({ message: "Lesson not found" });
-    }
-
-    const resource = lesson.resources[resourceIndex];
-    if (!resource) {
-      return res.status(404).json({ message: "Resource not found" });
-    }
-
-    // 🔥 Delete old PDF from Cloudinary
-    await deleteFromCloudinary(resource.publicId, "raw");
-
-    // 🔄 Upload new PDF
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: "upskillr/pdfs",
-        resource_type: "raw"
-      },
-      async (error, result) => {
-        if (error) {
-          console.error(error);
-          return res.status(500).json({ message: "Upload failed" });
-        }
-
-        // 🔁 Replace in MongoDB
-        lesson.resources[resourceIndex] = {
-          name: req.file.originalname,
-          url: result.secure_url,
-          publicId: result.public_id
-        };
-
-        await lesson.save();
-
-        res.json({
-          message: "PDF replaced successfully",
-          resource: lesson.resources[resourceIndex]
-        });
-      }
-    );
-
-    streamifier.createReadStream(req.file.buffer).pipe(stream);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-
-export const deleteLessonPDF = async (req, res) => {
-  try {
-    const { lessonId, resourceIndex } = req.params;
+    const { lessonId, resourceId } = req.params;
 
     const lesson = await Lesson.findById(lessonId);
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
 
-    const resource = lesson.resources[resourceIndex];
+    const resource = lesson.resources.id(resourceId);
     if (!resource) return res.status(404).json({ message: "Resource not found" });
 
-    await deleteFromCloudinary(resource.publicId, "raw");
+    // 🔥 Delete old PDF from Cloudinary
+    if (resource.publicId) {
+      await deleteFromCloudinary(resource.publicId, "raw");
+    }
 
-    lesson.resources.splice(resourceIndex, 1);
+    // 🔁 Replace with new PDF
+    resource.name = req.file.originalname;
+    resource.url = req.file.path;
+    resource.publicId = req.file.filename;
+
     await lesson.save();
 
-    res.json({ message: "PDF deleted" });
+    res.json({
+      message: "PDF replaced",
+      resource
+    });
+
   } catch (err) {
-    console.error(err);
+    console.error("REPLACE PDF ERROR:", err);
+    res.status(500).json({ message: "Replace failed" });
+  }
+};
+
+
+
+export const deleteLessonPDF = async (req, res) => {
+  try {
+    const { lessonId, resourceId } = req.params;
+
+    const lesson = await Lesson.findById(lessonId);
+    if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+
+    const resource = lesson.resources.id(resourceId);
+    if (!resource) return res.status(404).json({ message: "Resource not found" });
+
+    // 🔥 Delete from Cloudinary
+    if (resource.publicId) {
+      await deleteFromCloudinary(resource.publicId, "raw");
+    }
+
+    lesson.resources.pull(resourceId);
+    await lesson.save();
+
+    res.json({
+      message: "PDF deleted",
+      resources: lesson.resources
+    });
+
+  } catch (err) {
+    console.error("DELETE PDF ERROR:", err);
     res.status(500).json({ message: "Delete failed" });
   }
 };

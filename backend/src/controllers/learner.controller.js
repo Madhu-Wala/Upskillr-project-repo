@@ -1,10 +1,11 @@
 import Enrollment from "../models/Enrollment.js";
 import Course from "../models/Course.js";
+import Lesson from "../models/Lesson.js";
 import Progress from "../models/Progress.js";
 
 /**
  * @route   GET /api/learners/my-courses
- * @desc    Get learner enrolled courses with progress
+ * @desc    Get learner enrolled courses with real progress
  * @access  Private (Learner)
  */
 export const getMyCourses = async (req, res) => {
@@ -15,38 +16,60 @@ export const getMyCourses = async (req, res) => {
     const enrollments = await Enrollment.find({ userId })
       .populate({
         path: "courseId",
-        select: "title thumbnail category difficulty"
+        select: "title thumbnail category difficulty instructor"
       })
       .sort({ createdAt: -1 })
       .lean();
 
-    // 2. Attach progress per course
-    const coursesWithProgress = await Promise.all(
-      enrollments.map(async (enrollment) => {
-        const progress = await Progress.findOne({
-          userId,
-          courseId: enrollment.courseId._id
-        })
-          .populate("lastAccessedLessonId", "title")
-          .lean();
+    const courses = [];
 
-        return {
-          _id: enrollment.courseId._id,
-          title: enrollment.courseId.title,
-          thumbnail: enrollment.courseId.thumbnail,
-          category: enrollment.courseId.category,
-          difficulty: enrollment.courseId.difficulty,
-          progressPercent: progress?.progressPercent || 0,
-          lastAccessedLesson: progress?.lastAccessedLessonId || null,
-          enrolledAt: enrollment.createdAt
-        };
-      })
-    );
+    for (const enrollment of enrollments) {
+      const course = enrollment.courseId;
 
-    res.status(200).json(coursesWithProgress);
+      // 2. Count total lessons in course
+      const totalLessons = await Lesson.countDocuments({
+        courseId: course._id
+      });
+
+      // 3. Get progress
+      const progress = await Progress.findOne({
+        userId,
+        courseId: course._id
+      }).lean();
+
+      const completedLessons = progress?.completedLessons || [];
+      const completedLessonsCount = completedLessons.length;
+
+      let progressPercent = 0;
+      if (totalLessons > 0) {
+        progressPercent = Math.round(
+          (completedLessonsCount / totalLessons) * 100
+        );
+      }
+
+      courses.push({
+        _id: course._id,
+        title: course.title,
+        thumbnail: course.thumbnail || null,
+        instructor: course.instructor?.name || "Instructor",
+        category: course.category,
+        difficulty: course.difficulty,
+
+        lessonsCount: totalLessons,
+        completedLessons,
+        completedLessonsCount,
+        progressPercent,
+        completed: progressPercent === 100,
+
+        lastAccessedLesson: progress?.lastAccessedLessonId || null,
+        enrolledAt: enrollment.createdAt
+      });
+    }
+
+    res.status(200).json(courses);
 
   } catch (error) {
     console.error("MY COURSES ERROR:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Failed to load courses" });
   }
 };
