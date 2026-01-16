@@ -14,6 +14,7 @@ import LearnerCourses from "./components/Learner/LearnerCourses";
 import Browse from "./components/Learner/Browse";
 import CoursePlayer from "./components/Learner/CoursePlayer";
 import QuizPlayer from "./components/Learner/QuizPlayer";
+import QuizAttempt from "./components/Learner/QuizAttempt";
 
 // Instructor Components
 import InstructorDashboard from "./components/Instructor/InstructorDashboard";
@@ -101,6 +102,7 @@ const dummyQuestions = [
             questions={dummyQuestions} 
             onComplete={() => setShowQuiz(false)} 
           />} />
+          <Route path="quiz/:quizId" element={<QuizAttempt />} />
         </Route>
 
         {/* INSTRUCTOR DASHBOARD ROUTES */}
