@@ -1,20 +1,54 @@
-import React, { useState } from 'react';
-import { Star, Send, X, CheckCircle2, MessageSquare } from 'lucide-react';
+import React, { useState } from "react";
+import axios from "axios";
+import { useParams } from "react-router-dom";
+import { Star, Send, X, CheckCircle2, MessageSquare } from "lucide-react";
 
-const CourseFeedback = ({ courseTitle, onSubmit, onClose }) => {
+
+const CourseFeedback = ({ courseTitle, courseId: propCourseId, onClose })  => {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const { courseId: paramCourseId } = useParams();
+  const courseId = paramCourseId || propCourseId;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // In a real app, you'd send { rating, feedback } to your DB here
+
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login first");
+      return;
+    }
+
+    if (!courseId) {
+      alert("Course ID not found");
+      return;
+    }
+
+    await axios.post(
+      `http://localhost:5000/api/reviews/courses/${courseId}/review`,
+      {
+        rating,
+        feedback
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
     setIsSubmitted(true);
-    setTimeout(() => {
-      if (onSubmit) onSubmit({ rating, feedback });
-    }, 2000);
-  };
+
+  } catch (error) {
+    console.error("FEEDBACK ERROR:", error);
+    alert("Failed to submit feedback");
+  }
+};
 
   if (isSubmitted) {
     return (

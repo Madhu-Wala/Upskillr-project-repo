@@ -14,16 +14,15 @@ export const addCourseReview = async (req, res) => {
       });
     }
 
-    // 1️⃣ Check course completion
-    const progress = await Progress.findOne({
+    // 1️⃣ Check if user is enrolled in course
+    const enrollment = await Progress.findOne({
       userId,
-      courseId,
-      completedAt: { $exists: true }
+      courseId
     });
 
-    if (!progress) {
+    if (!enrollment) {
       return res.status(403).json({
-        message: "Complete the course to leave a review"
+        message: "You must be enrolled in this course to leave a review"
       });
     }
 
@@ -87,6 +86,22 @@ export const getInstructorReviews = async (req, res) => {
 
   } catch (error) {
     console.error("INSTRUCTOR REVIEWS ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getRecentHighRatedReviews = async (req, res) => {
+  try {
+    const reviews = await Rating.find({ rating: { $gte: 4 } })
+      .populate("userId", "name avatar")
+      .populate("courseId", "title")
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.status(200).json(reviews);
+
+  } catch (error) {
+    console.error("GET RECENT HIGH RATED REVIEWS ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

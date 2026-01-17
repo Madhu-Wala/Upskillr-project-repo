@@ -44,7 +44,7 @@ app.use("/api",quizRoutes);
 app.use("/api/quizzes", quizRoutes);
 
 //review routes
-app.use("/api", reviewRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 // Protected test route
 app.get("/api/profile", protect, (req, res) => {
