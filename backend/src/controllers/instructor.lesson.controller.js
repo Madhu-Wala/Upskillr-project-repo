@@ -10,13 +10,20 @@ export const createLesson = async (req, res) => {
   try {
     const instructorId = req.user._id;
     const { courseId } = req.params;
-    const { title, videoURL, contentMarkdown, resources } = req.body;
+    const { title, contentMarkdown, resources } = req.body;
 
     // 1️⃣ Validate input
-    if (!title || !videoURL) {
+    // if (!title || !videoURL) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "title and videoURL are required"
+    //   });
+    // }
+    // 1️⃣ Validate input 
+    if (!title) {
       return res.status(400).json({
         success: false,
-        message: "title and videoURL are required"
+        message: "Title is required"
       });
     }
 
@@ -41,7 +48,7 @@ export const createLesson = async (req, res) => {
     const lesson = await Lesson.create({
       courseId,
       title,
-      videoURL,
+      video: { url: "", publicId: "" },
       contentMarkdown,
       order,
       resources: resources || []
@@ -75,7 +82,7 @@ export const updateLesson = async (req, res) => {
   try {
     const instructorId = req.user._id;
     const { lessonId } = req.params;
-    const { title, videoURL, contentMarkdown, resources } = req.body;
+    const { title, contentMarkdown, resources } = req.body;
 
     // 1️⃣ Find lesson
     const lesson = await Lesson.findById(lessonId);
@@ -101,7 +108,7 @@ export const updateLesson = async (req, res) => {
 
     // 3️⃣ Update fields safely
     if (title !== undefined) lesson.title = title;
-    if (videoURL !== undefined) lesson.videoURL = videoURL;
+  //  if (videoURL !== undefined) lesson.videoURL = videoURL;
     if (contentMarkdown !== undefined) lesson.contentMarkdown = contentMarkdown;
     if (resources !== undefined) lesson.resources = resources;
 

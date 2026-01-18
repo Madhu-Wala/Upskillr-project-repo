@@ -109,6 +109,15 @@ export const uploadLessonVideo = async (req, res) => {
     const { lessonId } = req.params;
     const instructorId = req.user._id;
 
+    // 1. Debugging logs (Terminal check karo)
+    console.log("Lesson ID:", lessonId);
+    console.log("File received:", req.file);
+
+    // 1️⃣ File check (Zaroori hai!)
+    if (!req.file) {
+      return res.status(400).json({ message: "No video file provided or invalid format" });
+    }
+
     const lesson = await Lesson.findById(lessonId);
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
 
@@ -192,7 +201,7 @@ export const deleteLessonVideo = async (req, res) => {
     await deleteFromCloudinary(lesson.video.publicId, "video");
 
     // 5. Remove video from lesson
-    lesson.video = null;
+    lesson.video = {url:"", publicId: "" };
     await lesson.save();
 
     res.json({

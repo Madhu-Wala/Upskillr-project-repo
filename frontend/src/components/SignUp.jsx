@@ -209,14 +209,14 @@ const Signup = () => {
           </button>
 
           {/* Divider */}
-          <div className="relative flex items-center py-2">
+          {/* <div className="relative flex items-center py-2">
             <div className="flex-grow border-t border-gray-100"></div>
             <span className="flex-shrink mx-4 text-gray-400 text-sm">or</span>
             <div className="flex-grow border-t border-gray-100"></div>
-          </div>
+          </div> */}
 
           {/* Google Button */}
-          <button
+          {/* <button
             type="button"
             className="w-full py-3.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-2xl font-semibold flex items-center justify-center gap-3 transition-colors active:scale-[0.98]"
           >
@@ -226,7 +226,7 @@ const Signup = () => {
               className="w-5 h-5" 
             />
             Continue with Google
-          </button>
+          </button> */}
         </form>
 
         {/* Login Link */}
@@ -237,6 +237,14 @@ const Signup = () => {
               Login
             </a>
           </p>
+        </div>
+        <div className="text-center mt-4">
+          <button
+            onClick={()=>navigate("/")}
+            className="px-5 py-2.5 w-20 cursor-pointer !mt-4 text-[15px] font-medium bg-indigo-600 hover:bg-indigo-800 text-white rounded-md"
+          >
+            Back
+          </button>
         </div>
       </div>
     </div>

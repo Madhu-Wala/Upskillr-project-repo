@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import MarkdownPreview from '@uiw/react-markdown-preview';
 import API from "../../api/axios";
 
 import LessonSidebar from './LessonSidebar';
@@ -93,7 +94,7 @@ const CoursePlayer = () => {
             <h1 className="text-4xl font-black text-gray-900 mb-8 tracking-tight">
               {courseInfo?.title}
             </h1>
-
+            {console.log(currentLesson)}
             <VideoPlayer videoURL={currentLesson.videoURL} title={currentLesson.title} />
 
             <div className="mt-12 bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm">
@@ -102,11 +103,13 @@ const CoursePlayer = () => {
                 <div className="h-px flex-1 bg-gray-50"></div>
               </div>
               
-              <div className="prose prose-indigo max-w-none text-gray-600 leading-relaxed font-medium">
-                <ReactMarkdown>
-                  {currentLesson.contentMarkdown}
-                </ReactMarkdown>
-              </div>
+              <div className="p-8 bg-white" data-color-mode="light">      
+              <MarkdownPreview
+                source={currentLesson.contentMarkdown}
+                style={{ backgroundColor: 'white', color: '#1e293b' }}
+              />
+            </div>
+
             </div>
           </div>
         </main>

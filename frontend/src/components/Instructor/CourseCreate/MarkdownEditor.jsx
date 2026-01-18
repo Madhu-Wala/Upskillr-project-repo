@@ -21,6 +21,10 @@ const MarkdownEditor = ({ value, onChange }) => {
           height={500}
           visibleDragbar={false}
           className="upskillr-mde"
+          textareaProps={{
+            placeholder:"Start Typing Lesson Content using Markdown Syntax here ... ",
+            autoFocus:true
+          }}
         />
       </div>
       

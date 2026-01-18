@@ -24,6 +24,7 @@ import InstructorStats from "./components/Instructor/InstructorStats";
 import StudentList from "./components/Instructor/StudentList";
 import InstructorProfile from "./components/Instructor/InstructorProfile";
 import Reviews from "./components/Instructor/Reviews";
+import CourseView from "./components/Instructor/CourseView";
 
 //  Import the Notifications component
 import Notifications from "./components/Instructor/Notifications";
@@ -118,10 +119,14 @@ const dummyQuestions = [
           {/* Settings & Extras */}
           <Route path="notifications" element={<Notifications />} />
           <Route path="profile" element={<InstructorProfile />} />
+          <Route path="course-preview/:courseId" element={<CourseView />} />
         </Route>
 
         {/* COURSE WIZARD (Standalone Page) */}
-        <Route path="/Instructor/create-course" element={<CourseCreateWizard />} />
+        <Route path="/Instructor/create-course" element={<CourseCreateWizard mode="create"/>} />
+        <Route path="/Instructor/edit-course/:urlCourseId" element={<CourseCreateWizard mode="edit" />} />
+        <Route path="/Instructor/course-preview/:courseId" element={<CourseView />} />
+
 
       </Routes>
     </BrowserRouter>
