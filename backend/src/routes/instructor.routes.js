@@ -6,7 +6,7 @@ import {
   createCourse,
   publishCourse,
   getInstructorCourses,getCourseById,
-  updateCourse
+  updateCourse,deleteCourse
 } from "../controllers/instructor.course.controller.js";
 import {
   createLesson,
@@ -17,7 +17,7 @@ import {
 
 import {
   createQuizForLesson,
-  addQuestionToQuiz
+  addQuestionToQuiz,getCourseQuizzes,deleteQuizFromLesson
 } from "../controllers/instructor.quiz.controller.js";
 
 import { getInstructorAnalytics } from "../controllers/instructor.controller.js";
@@ -72,6 +72,13 @@ router.put(
   protect,
   instructorOnly,
   updateCourse
+);
+
+router.delete(
+  "/courses/:courseId",
+  protect,
+  instructorOnly,
+  deleteCourse
 );
 
 router.get(
@@ -137,7 +144,20 @@ router.post(
   instructorOnly,
   addQuestionToQuiz
 );
+// Get all quizzes for a course (Step 4 Sync)
+router.get(
+  "/courses/:courseId/quizzes",
+  protect,
+  instructorOnly,
+  getCourseQuizzes
+);
 
+router.delete(
+  "/lessons/:lessonId/quiz",
+  protect,
+  instructorOnly,
+  deleteQuizFromLesson
+);
 /* =======================
    UPLOAD ROUTES
 ======================= */

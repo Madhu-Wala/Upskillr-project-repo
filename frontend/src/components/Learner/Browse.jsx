@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import API from "../../api/axios";
-import { 
-  Search, Bell, BookOpen, LogOut, Filter, 
-  ChevronDown, ChevronLeft, ChevronRight ,Loader2
-} from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import CourseCard from './CourseCard';
 import CourseDrawer from './CourseDrawer';
@@ -50,7 +47,7 @@ function Browse() {
   useEffect(() => {
     const loadEnrollments = async () => {
       try {
-        const res = await API.get("/api/learner/my-courses");
+        const res = await API.get("/api/learners/my-courses");
         const ids = new Set(res.data.map(c => c.courseId._id));
         setEnrolledCourses(ids);
       } catch {
@@ -119,6 +116,8 @@ function Browse() {
                   ...course,
                   instructor: course.instructorId?.name || "Instructor",
                   id: course._id,
+                  // ✅ FIX: Extract URL from object if necessary
+                  thumbnail: course.thumbnail?.url || course.thumbnail || "https://via.placeholder.com/300x200?text=No+Image",
                   enrolled: enrolledCourses.has(course._id)
                 }} 
                 fallbackGradient={THEME_GRADIENTS[index % THEME_GRADIENTS.length]}

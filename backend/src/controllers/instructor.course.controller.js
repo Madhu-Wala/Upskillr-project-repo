@@ -62,7 +62,7 @@ export const updateCourse = async (req, res) => {
     if (!updatedCourse) {
       return res.status(404).json({ message: "Course not found" });
     }
-
+    console.log("Updated Course:", updatedCourse);
     res.status(200).json({ success: true, data: updatedCourse });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -151,3 +151,46 @@ export const getInstructorCourses = async (req, res) => {
   }
 };
 
+import Lesson from "../models/Lesson.js"; // Import your Lesson model
+import Quiz from "../models/Quiz.js";     // Import your Quiz model
+
+/**
+ * @route DELETE /api/instructor/courses/:courseId
+ * @desc Delete course, lessons, quizzes, and enrollments
+ * @access Instructor
+ */
+export const deleteCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const instructorId = req.user._id;
+
+    // 1. Verify Ownership (Security Check)
+    const course = await Course.findOne({ _id: courseId, instructorId });
+
+    if (!course) {
+      return res.status(404).json({
+        message: "Course not found or you are not authorized"
+      });
+    }
+
+    // 2. Perform Cascade Deletion
+    // Ek saath sab saaf karo (Parallel Execution for speed)
+    await Promise.all([
+      Lesson.deleteMany({ courseId: courseId }),     // Delete all lessons
+      Quiz.deleteMany({ courseId: courseId }),       // Delete all quizzes 
+      Enrollment.deleteMany({ courseId: courseId }), // Clear enrollment records
+    ]);
+
+    // 3. Delete the Course itself
+    await Course.findByIdAndDelete(courseId);
+
+    res.status(200).json({
+      success: true,
+      message: "Course and all related content (Lessons, Quizzes, Enrollments) deleted successfully"
+    });
+
+  } catch (error) {
+    console.error("CASCADE DELETE ERROR:", error);
+    res.status(500).json({ message: "Server error during deletion" });
+  }
+};

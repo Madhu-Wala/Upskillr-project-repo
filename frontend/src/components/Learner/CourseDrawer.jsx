@@ -1,8 +1,18 @@
 import React from 'react';
-import { X, BookOpen, Clock, PlayCircle, ShieldCheck, Loader2 } from 'lucide-react';
+import { X, BookOpen, PlayCircle, ShieldCheck, Loader2, User, Lock } from 'lucide-react';
 
 const CourseDrawer = ({ course, isOpen, onClose, onEnroll, loading, enrolled }) => {
   if (!course) return null;
+
+  // Helper to safely get instructor name
+  const getInstructorName = () => {
+    if (!course.instructor) return 'Upskillr Instructor';
+    if (typeof course.instructor === 'string') return course.instructor;
+    if (course.instructor.firstName) {
+      return `${course.instructor.firstName} ${course.instructor.lastName || ''}`;
+    }
+    return course.instructor.name || 'Upskillr Instructor';
+  };
 
   return (
     <>
@@ -28,31 +38,62 @@ const CourseDrawer = ({ course, isOpen, onClose, onEnroll, loading, enrolled }) 
           <div className="flex-1 overflow-y-auto p-6 space-y-8">
             <div className="space-y-4">
               <h2 className="text-2xl font-black text-gray-900 leading-tight">{course.title}</h2>
+              
+              <div className="flex items-center gap-2 text-gray-500 font-medium text-sm">
+                <User size={16} className="text-indigo-600" />
+                <span>Instructor: {getInstructorName()}</span>
+              </div>
+
               <p className="text-gray-500 font-medium leading-relaxed">{course.description}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-indigo-50 rounded-2xl">
-                <Clock className="text-indigo-600 mb-2" size={20} />
-                <p className="text-xs text-indigo-400 font-bold uppercase tracking-wider">Duration</p>
-                <p className="text-indigo-900 font-black">4.5 Hours</p>
-              </div>
-              <div className="p-4 bg-emerald-50 rounded-2xl">
-                <BookOpen className="text-emerald-600 mb-2" size={20} />
-                <p className="text-xs text-emerald-400 font-bold uppercase tracking-wider">Lessons</p>
-                <p className="text-emerald-900 font-black">{course.lessonsCount} Modules</p>
+            {/* Stats */}
+            <div className="grid grid-cols-1 gap-4">
+              <div className="p-4 bg-emerald-50 rounded-2xl flex items-center justify-between">
+                <div>
+                    <p className="text-xs text-emerald-400 font-bold uppercase tracking-wider">Lessons</p>
+                    <p className="text-emerald-900 font-black">{course.lessonsCount || course.lessons?.length || 0} Modules</p>
+                </div>
+                <BookOpen className="text-emerald-600" size={24} />
               </div>
             </div>
 
-            {/* Dummy Syllabus Preview */}
+            {/* ✅ FIXED: Always show lessons list (Preview Mode) */}
             <div className="space-y-4">
               <h4 className="font-bold text-gray-900">What you'll learn</h4>
-              {[1, 2, 3].map((_, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl group hover:border-indigo-200 transition-colors">
-                  <PlayCircle size={18} className="text-gray-300 group-hover:text-indigo-500" />
-                  <span className="text-sm font-medium text-gray-600">Introduction to the core concepts</span>
+              
+              {course.lessons && course.lessons.length > 0 ? (
+                <div className="space-y-3">
+                  {/* Map through lessons (Showing up to 5 or all) */}
+                  {course.lessons.map((lesson, i) => (
+                    <div key={lesson._id || i} className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl group hover:border-indigo-200 transition-colors bg-white">
+                      <div className="h-8 w-8 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">
+                        {/* Show Play icon if enrolled, Lock icon if not */}
+                        {enrolled ? (
+                          <PlayCircle size={16} className="text-indigo-600" />
+                        ) : (
+                          <Lock size={16} className="text-gray-400" />
+                        )}
+                      </div>
+                      <span className="text-sm font-bold text-gray-700 line-clamp-1">
+                        {lesson.title || `Lesson ${i + 1}`}
+                      </span>
+                    </div>
+                  ))}
+                  
+                  {/* Optional: Message if there are more lessons */}
+                  {course.lessonsCount > course.lessons.length && (
+                     <p className="text-xs text-center text-gray-400 italic">
+                       + {course.lessonsCount - course.lessons.length} more lessons available
+                     </p>
+                  )}
                 </div>
-              ))}
+              ) : (
+                // Fallback if backend really sends nothing
+                <div className="p-4 bg-gray-50 rounded-xl text-center text-sm text-gray-400 italic">
+                  No lessons listed for this course yet.
+                </div>
+              )}
             </div>
           </div>
 
@@ -82,10 +123,11 @@ const CourseDrawer = ({ course, isOpen, onClose, onEnroll, loading, enrolled }) 
                 </>
               )}
             </button>
-
-            <p className="text-center text-xs text-gray-400 mt-4 font-medium italic">
-              Access starts immediately after clicking
-            </p>
+            {!enrolled && (
+              <p className="text-center text-xs text-gray-400 mt-4 font-medium italic">
+                Access starts immediately after clicking
+              </p>
+            )}
           </div>
         </div>
       </div>

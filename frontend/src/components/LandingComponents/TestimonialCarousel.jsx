@@ -1,35 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
-
-const testimonials = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    role: "Frontend Developer at Google",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80",
-    text: "UpSkillr transformed my career! The bite-sized lessons fit perfectly into my schedule, and I landed my dream job as a frontend developer within 3 months."
-  },
-  {
-    id: 2,
-    name: "Michael Chen",
-    role: "UX Designer at Airbnb",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
-    text: "The real-time progress tracking kept me motivated throughout my learning journey. The UI/UX course was exactly what I needed to transition into design."
-  },
-  {
-    id: 3,
-    name: "Emily Rodriguez",
-    role: "Data Analyst at Meta",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80",
-    text: "Best investment in my career! The courses are practical, engaging, and taught by industry experts. I've already recommended UpSkillr to all my colleagues."
-  }
-];
+import API from '../../api/axios';
 
 const TestimonialCarousel = () => {
+  const [testimonials, setTestimonials] = useState([]);
   const [index, setIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Check screen size for animation offsets
   useEffect(() => {
@@ -39,13 +18,62 @@ const TestimonialCarousel = () => {
     return () => window.removeEventListener('resize', checkRes);
   }, []);
 
+  // Fetch recent high-rated reviews from database
   useEffect(() => {
-    if (isHovered) return;
-    const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % testimonials.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [index, isHovered]);
+    const fetchTestimonials = async () => {
+      try {
+        setLoading(true);
+        const response = await API.get('/api/reviews/recent-high-rated');
+        console.log('API Response:', response.data);
+        
+        // Transform API data to component format
+        const formattedTestimonials = response.data.map((review) => ({
+          id: review._id,
+          name: review.userId?.name || 'Anonymous',
+          role: review.courseId?.title || 'Course Learner',
+          image: review.userId?.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+          text: review.feedback || 'Great course!',
+          rating: review.rating
+        }));
+        
+        console.log('Formatted testimonials:', formattedTestimonials);
+        setTestimonials(formattedTestimonials);
+      } catch (error) {
+        console.error('Error fetching testimonials:', error.response || error.message);
+        // Fallback testimonials if API fails
+        setTestimonials([
+          {
+            id: 1,
+            name: "Sarah Johnson",
+            role: "Frontend Developer at Google",
+            image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80",
+            text: "UpSkillr transformed my career! The bite-sized lessons fit perfectly into my schedule, and I landed my dream job.",
+            rating: 5
+          },
+          {
+            id: 2,
+            name: "Michael Chen",
+            role: "UX Designer at Airbnb",
+            image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
+            text: "The real-time progress tracking kept me motivated throughout my learning journey.",
+            rating: 5
+          },
+          {
+            id: 3,
+            name: "Emily Rodriguez",
+            role: "Data Analyst at Meta",
+            image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80",
+            text: "Best investment in my career! The courses are practical, engaging, and taught by industry experts.",
+            rating: 5
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTestimonials();
+  }, []);
 
   const handleNext = () => setIndex((prev) => (prev + 1) % testimonials.length);
   const handlePrev = () => setIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
@@ -55,6 +83,31 @@ const TestimonialCarousel = () => {
     curr: index,
     next: (index + 1) % testimonials.length
   };
+
+  // Auto-rotate carousel
+  useEffect(() => {
+    if (isHovered || testimonials.length === 0) return;
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % testimonials.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [index, isHovered, testimonials.length]);
+
+  if (loading || testimonials.length === 0) {
+    return (
+      <section id='testimonials' className="bg-white py-12 md:py-24 px-4 overflow-hidden">
+        <div className="max-w-7xl mx-auto text-center mb-12 md:mb-20">
+          <span className="px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-6 inline-block">
+            Success Stories
+          </span>
+          <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">What Our Learners Say</h2>
+          <p className="text-slate-500 font-medium max-w-2xl mx-auto text-sm md:text-base px-4">
+            Loading testimonials...
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id='testimonials' className="bg-white py-12 md:py-24 px-4 overflow-hidden">
@@ -80,7 +133,7 @@ const TestimonialCarousel = () => {
             
             return (
               <motion.div
-                key={testimonials[itemIndex].id}
+                key={`${itemIndex}-${testimonials[itemIndex]?.id}`}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{
                   opacity: isCenter ? 1 : 0.4,
@@ -97,7 +150,7 @@ const TestimonialCarousel = () => {
               >
                 <div className="flex gap-1 mb-6">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={isMobile ? 14 : 18} className="fill-amber-400 text-amber-400" />
+                    <Star key={i} size={isMobile ? 14 : 18} className={`${i < testimonials[itemIndex].rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
                   ))}
                 </div>
 

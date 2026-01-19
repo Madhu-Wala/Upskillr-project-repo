@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import ReactMarkdown from 'react-markdown';
+import MarkdownPreview from '@uiw/react-markdown-preview';
 import API from "../../api/axios";
 
 import LessonSidebar from './LessonSidebar';
 import VideoPlayer from './VideoPlayer';
 import ResourcePanel from './ResourcePanel';
 import CourseFeedback from './CourseFeedback';
+import QuizAttempt from './QuizAttempt'; 
 
 const CoursePlayer = () => {
   const navigate = useNavigate();
@@ -20,6 +21,71 @@ const CoursePlayer = () => {
   const [completedLessonIds, setCompletedLessonIds] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Quiz State
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [hasQuiz, setHasQuiz] = useState(false);
+  const [quizStatus, setQuizStatus] = useState({
+    attempted: false,
+    passed: false,
+    quizId: null
+  });
+
+  // Quiz Button Handlers
+  const handleAttemptQuiz = () => {
+    setShowQuiz(true);
+  };
+
+  const handleViewSolutions = () => {
+    if (!quizStatus.quizId) {
+      alert("Quiz not attempted yet");
+      return;
+    }
+    setShowQuiz(true);
+  };
+
+  // Check Quiz Status when Lesson Changes
+  useEffect(() => {
+    if (!currentLesson) return;
+
+    // Reset UI state when lesson changes
+    setShowQuiz(false); 
+
+    const loadQuizStatus = async () => {
+      try {
+        // 1. Check if quiz exists
+        const existsRes = await API.get(`/api/lessons/${currentLesson._id}/exists`);
+        
+        if (!existsRes.data.exists) {
+          setHasQuiz(false);
+          return;
+        }
+
+        const qId = existsRes.data.quizId;
+        setHasQuiz(true);
+
+        // 2. Check if already attempted
+        const statusRes = await API.get(`/api/quizzes/${qId}/status`);
+
+        setQuizStatus({
+          attempted: statusRes.data.attempted === true,
+          passed: statusRes.data.passed === true,
+          quizId: qId
+        });
+      } catch (err) {
+        // Silent fail on 404 (means no quiz), only log real errors
+        if (err.response && err.response.status === 404) {
+            setHasQuiz(false);
+        } else {
+            console.error("Quiz check failed", err);
+            setHasQuiz(false);
+        }
+      }
+    };
+
+    loadQuizStatus();
+  }, [currentLesson]);
+
+  // Existing Course Loading Logic
   useEffect(() => {
     const loadCoursePlayer = async () => {
       try {
@@ -28,6 +94,12 @@ const CoursePlayer = () => {
         setCourseInfo(res.data.course);
         setLessons(res.data.lessons);
 
+        // ✅ CRITICAL FIX: Load the saved progress from DB
+        // This ensures checkmarks persist after refresh!
+        if (res.data.completedLessonIds) {
+          setCompletedLessonIds(res.data.completedLessonIds);
+        }
+
         const startLesson =
           res.data.lessons.find(l => l._id === res.data.lastAccessedLesson) ||
           res.data.lessons[0];
@@ -35,15 +107,14 @@ const CoursePlayer = () => {
         setCurrentLesson(startLesson);
       } catch (error) {
         if (error.response?.status === 404) {
-          alert("This course does not have any lessons yet. Please check back later.");
+          alert("This course does not have any lessons yet.");
           navigate("/Learner/my-courses");
         } else {
-          alert("Something went wrong while loading the course.");
+          console.error(error);
         }
+      } finally {
+        setLoading(false);
       }
-      finally {
-              setLoading(false);
-            }
     };
 
     loadCoursePlayer();
@@ -94,29 +165,65 @@ const CoursePlayer = () => {
               {courseInfo?.title}
             </h1>
 
-            <VideoPlayer videoURL={currentLesson.videoURL} title={currentLesson.title} />
+            {/* Show Quiz OR Video/Markdown */}
+            {showQuiz ? (
+              <QuizAttempt
+                lessonId={currentLesson._id}
+                onClose={() => setShowQuiz(false)}
+                // ✅ KEY LOGIC: When submitted, update state to "attempted: true"
+                onSubmitted={() => {
+                  // 1. Update Quiz Status to show "View Solutions"
+                  setQuizStatus(prev => ({ 
+                    ...prev, 
+                    attempted: true, 
+                    quizId: prev.quizId 
+                  }));
 
-            <div className="mt-12 bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase">Lesson Notes</span>
-                <div className="h-px flex-1 bg-gray-50"></div>
-              </div>
-              
-              <div className="prose prose-indigo max-w-none text-gray-600 leading-relaxed font-medium">
-                <ReactMarkdown>
-                  {currentLesson.contentMarkdown}
-                </ReactMarkdown>
-              </div>
-            </div>
+                  // 2. ✅ Update Sidebar Icon to "Completed" immediately
+                  if (!completedLessonIds.includes(currentLesson._id)) {
+                    setCompletedLessonIds(prev => [...prev, currentLesson._id]);
+                  }
+                }}
+              />
+            ) : (
+              <>
+                {/* ✅ FIXED: Extract the URL string properly */}
+                <VideoPlayer 
+                  videoURL={currentLesson.video?.url || currentLesson.video || ""} 
+                  title={currentLesson.title} 
+                />
+
+                <div className="mt-12 bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase">Lesson Notes</span>
+                    <div className="h-px flex-1 bg-gray-50"></div>
+                  </div>
+                  
+                  <div className="p-8 bg-white" data-color-mode="light">      
+                    <MarkdownPreview
+                      source={currentLesson.contentMarkdown}
+                      style={{ backgroundColor: 'white', color: '#1e293b' }}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </main>
 
         {/* Right Resource & Action Panel */}
         <ResourcePanel 
+          // Existing props
           resources={currentLesson.resources || []} 
-          quizId={currentLesson.quizId} 
           onMarkComplete={handleMarkComplete}
           onShowFeedback={() => setShowFeedback(true)}
+          currentLessonId={currentLesson._id}
+          // Quiz props
+          hasQuiz={hasQuiz}
+          // ✅ This status prop controls the button text
+          quizStatus={quizStatus.attempted ? "attempted" : "not_attempted"}
+          onAttemptQuiz={handleAttemptQuiz}
+          onViewSolutions={handleViewSolutions}
         />
       </div>
 

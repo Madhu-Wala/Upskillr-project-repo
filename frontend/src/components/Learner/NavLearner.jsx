@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { BookOpen, Bell, LogOut, Search, Menu, X } from 'lucide-react';
+// ✅ Added 'User' to imports
+import { BookOpen, Bell, LogOut, Search, Menu, X, User } from 'lucide-react';
 
 function NavLearner() {
   const navigate = useNavigate();
@@ -8,12 +9,10 @@ function NavLearner() {
   const isLoggedIn = !!localStorage.getItem("token");
 
   function handleSignOut() {
-    // Add sign-out logic here
     localStorage.clear();
     navigate('/login');
   }
 
-  // Matching the cleaner UpSkillr styling
   const navLinkClass = ({ isActive }) =>
     `transition-all duration-300 text-sm py-2 block md:py-1 ${
       isActive 
@@ -62,11 +61,10 @@ function NavLearner() {
               <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full"></span>
             </div>
 
-            <img 
-              src="https://i.pravatar.cc/150?u=sarah" 
-              alt="profile" 
-              className="w-8 h-8 rounded-full border border-gray-200 shadow-sm hover:ring-2 hover:ring-indigo-100 transition-all cursor-pointer" 
-            />
+            {/* ✅ UPDATED: Default Profile Icon */}
+            <div className="w-8 h-8 bg-indigo-50 rounded-full flex items-center justify-center border border-indigo-100 shadow-sm cursor-pointer hover:ring-2 hover:ring-indigo-100 transition-all">
+              <User className="w-4 h-4 text-indigo-600" />
+            </div>
 
             {/* Desktop Sign Out */}
             <button 

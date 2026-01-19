@@ -147,7 +147,7 @@ const Login = () => {
           </button>
 
           {/* Divider */}
-          <div className="relative flex items-center py-2">
+          {/* <div className="relative flex items-center py-2">
             <div className="flex-grow border-t border-gray-100"></div>
             <span className="flex-shrink mx-4 text-gray-400 text-xs font-medium uppercase tracking-wider">
               or continue with
@@ -155,7 +155,7 @@ const Login = () => {
             <div className="flex-grow border-t border-gray-100"></div>
           </div>
 
-          {/* Google Button */}
+          {/* Google Button *}
           <button
             type="button"
             className="w-full py-3.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-2xl font-semibold flex items-center justify-center gap-3 transition-colors active:scale-[0.98]"
@@ -166,8 +166,8 @@ const Login = () => {
               className="w-5 h-5" 
             />
             Continue with Google
-          </button>
-        </form>
+          </button>*/}
+        </form> 
 
         {/* Sign Up Link */}
         <div className="mt-8 text-center">

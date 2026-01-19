@@ -32,13 +32,19 @@ const storage = new CloudinaryStorage({
       folder,
       resource_type,
       allowed_formats: ["jpg", "jpeg", "png", "mp4", "webm", "mov"],
-      public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, "")}`
-    };
+      public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, "")}`,
+      // 🎥 Speed badhane aur failure rokne ke liye:
+      chunk_size: 6000000, // 6MB ke tukdo mein upload karega (faster & stable)
+      timeout: 240000 // 4 minutes timeout
+};
   }
 });
 
 export const uploadMedia = multer({
   storage,
+  limits: {
+    fileSize: 150 * 1024 * 1024, // 🚩 150MB kar diya taaki bade lectures na rukein
+  },
   fileFilter: (req, file, cb) => {
     if (
       file.mimetype.startsWith("image") ||

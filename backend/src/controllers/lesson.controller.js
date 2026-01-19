@@ -1,7 +1,7 @@
 import Lesson from "../models/Lesson.js";
 import Course from "../models/Course.js";
 import Enrollment from "../models/Enrollment.js";
-
+import axios from "axios";
 /**
  * @route   GET /api/lessons/:lessonId
  * @desc    Get lesson (locked unless enrolled)
@@ -103,3 +103,40 @@ export const getLessonsByCourse = async(req,res) => {
         res.status(500).json({message:"Server Error"});
     }
 };
+
+export const downloadLessonPDF = async (req, res) => {
+  try {
+    const { lessonId, resourceId } = req.params;
+
+    // 1. Find lesson
+    const lesson = await Lesson.findById(lessonId);
+    if (!lesson) {
+      return res.status(404).json({ message: "Lesson not found" });
+    }
+
+    // 2. Find resource inside the lesson
+    const resource = lesson.resources.id(resourceId);
+    if (!resource) {
+      return res.status(404).json({ message: "Resource not found" });
+    }
+
+    // 3. Fetch PDF as stream from Cloudinary
+    const response = await axios.get(resource.url, {
+      responseType: "stream"
+    });
+
+    // 4. Set Headers to force download
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${resource.name}.pdf"` // Ensure .pdf extension
+    );
+
+    // 5. Pipe the stream to the response
+    response.data.pipe(res);
+
+  } catch (error) {
+    console.error("DOWNLOAD PDF ERROR:", error);
+    res.status(500).json({ message: "PDF download failed" });
+  }
+};  

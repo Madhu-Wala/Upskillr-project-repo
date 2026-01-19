@@ -21,7 +21,8 @@ const app = express();
    GLOBAL MIDDLEWARE
 ========================= */
 app.use(cors());
-app.use(express.json());
+app.use(express.json({limit:"150mb"}));
+app.use(express.urlencoded({ extended: true, limit:"150mb" }));
 
 /* =========================
    ROUTES
@@ -30,28 +31,33 @@ app.use(express.json());
 // Auth routes
 app.use("/api/auth", authRoutes);
 
+// ✅ FIX: QUIZ ROUTES MUST BE AT THE TOP
+// This ensures /api/lessons/:id/exists is handled here.
+app.use("/api", quizRoutes); 
+app.use("/api/quizzes", quizRoutes);
+
 // Course & lesson routes
 app.use("/api/courses", courseRoutes);
 app.use("/api/courses", lessonRoutes);
 app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/instructor", instructorRoutes);
-app.use("/api/lessons", lessonRoutes);
-app.use("/api/learners",learnerRoutes);
 
-//quiz routes
-app.use("/api",quizRoutes);
-app.use("/api/quizzes", quizRoutes);
+// ⚠️ This route handles /api/lessons/:id
+// It MUST come AFTER quizRoutes
+app.use("/api/lessons", lessonRoutes); 
 
-//review routes
-app.use("/api", reviewRoutes);
+app.use("/api/learners", learnerRoutes);
+
+// Review routes
+app.use("/api/reviews", reviewRoutes);
 
 // Protected test route
 app.get("/api/profile", protect, (req, res) => {
   res.status(200).json(req.user);
 });
 
-// Health check (ALWAYS keep this)
+// Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "OK",
@@ -60,11 +66,8 @@ app.get("/api/health", (req, res) => {
 });
 
 /* =========================
-   404 HANDLER (IMPORTANT)
+   404 HANDLER
 ========================= */
-
-
-
 app.use((req, res) => {
   console.error("❌ Route not found:", req.method, req.originalUrl);
   res.status(404).json({

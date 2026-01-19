@@ -1,47 +1,58 @@
 import React from 'react';
-import { PlayCircle, CheckCircle, Lock } from 'lucide-react';
+import { PlayCircle, CheckCircle, Lock } from 'lucide-react'; // ✅ Using CheckCircle for the clean tick
 
-const LessonSidebar = ({ lessons, activeLessonId, completedLessonIds, onLessonSelect }) => {
+const LessonSidebar = ({ lessons, activeLessonId, completedLessonIds = [], onLessonSelect }) => {
+  
   return (
-    <div className="w-80 flex flex-col bg-white border-r border-gray-100 h-[calc(100vh-73px)] sticky top-[73px]">
+    <aside className="w-80 bg-white border-r border-gray-100 h-[calc(100vh-73px)] sticky top-[73px] overflow-y-auto flex flex-col">
       <div className="p-6 border-b border-gray-100">
-        <h3 className="font-black text-gray-900 uppercase tracking-widest text-xs">Course Content</h3>
-        <p className="text-gray-400 text-xs mt-1 font-medium">{lessons.length} Lessons • 4h 20m</p>
+        <h2 className="font-black text-gray-900 text-lg tracking-tight">Course Content</h2>
+        <p className="text-xs text-gray-400 font-bold mt-1">
+          {completedLessonIds.length} / {lessons.length} COMPLETED
+        </p>
       </div>
-      
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
+
+      <div className="flex-1 py-2">
         {lessons.map((lesson, index) => {
-          const isActive = activeLessonId === lesson._id;
+          const isActive = lesson._id === activeLessonId;
           const isCompleted = completedLessonIds.includes(lesson._id);
 
           return (
             <button
               key={lesson._id}
               onClick={() => onLessonSelect(lesson)}
-              className={`w-full flex items-start gap-3 p-4 rounded-2xl transition-all text-left group ${
-                isActive ? 'bg-indigo-50 border-indigo-100' : 'hover:bg-gray-50'
-              }`}
+              className={`w-full text-left px-6 py-4 flex items-start gap-4 transition-all border-l-4 
+                ${isActive 
+                  ? 'bg-indigo-50 border-indigo-600' 
+                  : 'border-transparent hover:bg-gray-50'
+                }`}
             >
-              <div className="mt-0.5">
+              <div className={`mt-0.5 shrink-0 transition-colors duration-300
+                ${isCompleted ? 'text-emerald-500' : isActive ? 'text-indigo-600' : 'text-gray-300'}
+              `}>
+                {/* ✅ FIXED: Simple Green Tick Icon */}
                 {isCompleted ? (
-                  <CheckCircle className="w-5 h-5 text-emerald-500 fill-emerald-50" />
+                  <CheckCircle size={20} /> 
                 ) : (
-                  <PlayCircle className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                  <PlayCircle size={20} />
                 )}
               </div>
+
               <div className="flex-1">
-                <span className={`text-[10px] font-black uppercase tracking-tighter ${isActive ? 'text-indigo-600' : 'text-gray-400'}`}>
-                  Lesson {index + 1}
+                <p className={`text-sm font-bold leading-snug mb-1 transition-colors
+                  ${isActive ? 'text-indigo-900' : isCompleted ? 'text-gray-500' : 'text-gray-600'}
+                `}>
+                  {index + 1}. {lesson.title}
+                </p>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                  {lesson.duration || "10 min"}
                 </span>
-                <h4 className={`text-sm font-bold leading-tight ${isActive ? 'text-indigo-900' : 'text-gray-700'}`}>
-                  {lesson.title}
-                </h4>
               </div>
             </button>
           );
         })}
       </div>
-    </div>
+    </aside>
   );
 };
 

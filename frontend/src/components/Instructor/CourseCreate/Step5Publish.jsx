@@ -1,219 +1,291 @@
-import { Check, Clock, File, Save, Send,HelpCircle,ImageIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  Check, HelpCircle, Star, BookOpen, 
+  Lightbulb, FileText, ExternalLink, Download, // Added 'Download'
+  ChevronRight, Eye, PlayCircle, AlertTriangle, Rocket, Layers,
+  BarChart 
+} from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import MarkdownPreview from '@uiw/react-markdown-preview';
+import VideoPlayer from '../../Learner/VideoPlayer';
 
-const Step5Publish = ({ onBack }) => {
+const Step5Publish = ({ onBack, courseData, lessons, allQuizzes, onPublish }) => {
+  const [activeLessonIdx, setActiveLessonIdx] = useState(0);
 
-  // Dummy Quiz Object matching your DB structure
-  const quizPreviewData = {
-    title: "Final Assessment: Web Patterns",
-    questions: [
-      {
-        _id: "q1",
-        questionText: "Which architectural pattern is shown in the logic flow below?",
-        diagramURL: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?auto=format&fit=crop&w=400&q=80",
-        options: [
-          { optionText: "MVC Architecture", isCorrect: false },
-          { optionText: "Observer Pattern", isCorrect: true },
-          { optionText: "Singleton", isCorrect: false },
-          { optionText: "Factory Method", isCorrect: false }
-        ]
-      },
-      {
-        _id: "q2",
-        questionText: "What is the primary purpose of the 'useMemo' hook in React?",
-        options: [
-          { optionText: "To create a global state", isCorrect: false },
-          { optionText: "To manage side effects", isCorrect: false },
-          { optionText: "To memoize expensive calculations", isCorrect: true },
-          { optionText: "To reference DOM elements", isCorrect: false }
-        ]
-      }
-    ]
+  const currentLesson = lessons[activeLessonIdx] || {};
+  const currentQuiz = allQuizzes.find(q => q.lessonId === currentLesson._id);
+
+  const isMissingContent = lessons.some(l => !l.contentMarkdown && !l.videoUrl);
+  const totalQuestions = allQuizzes.reduce((acc, q) => acc + q.questions.length, 0);
+
+  // ✅ 1. ADDED: Download Handler Logic
+  const handleDownloadPDF = async (pdfUrl, pdfName) => {
+    try {
+      const response = await fetch(pdfUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', pdfName || 'resource.pdf');
+      document.body.appendChild(link);
+      
+      link.click();
+      
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download failed:", error);
+      window.open(pdfUrl, '_blank');
+    }
   };
 
   return (
-    <div>
-    <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
+    <div className="max-w-6xl mx-auto pb-32 font-sans px-4 animate-in fade-in duration-500">
       
-      {/* LEFT: PREVIEW */}
-      <div className="lg:col-span-2 space-y-6">
-        <div className="bg-white rounded-2xl p-8 border border-gray-100">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Course Preview</h2>
-              <p className="text-gray-500 text-sm">How your course will appear to students</p>
-            </div>
-            <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full border border-gray-200">Draft</span>
+      {/* 1. COURSE HERO SECTION */}
+      <div className="relative overflow-hidden bg-slate-900 rounded-[3rem] p-8 md:p-12 mb-10 text-white shadow-2xl">
+        <div className="relative z-10 flex flex-col md:flex-row gap-10 items-center">
+          <div className="w-full md:w-72 h-48 flex-none rounded-3xl overflow-hidden border-4 border-white/10 bg-slate-800 shadow-2xl">
+            {courseData?.thumbnail ? (
+              <img src={courseData.thumbnail} alt="Course Preview" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-indigo-500/20 text-indigo-300">
+                <Layers size={48} className="mb-2 opacity-40" />
+                <span className="text-[10px] font-black uppercase tracking-widest">No Thumbnail</span>
+              </div>
+            )}
           </div>
 
-          <div className="relative rounded-2xl overflow-hidden mb-6 group cursor-pointer">
-            <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80" alt="Course" className="w-full h-64 object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
-               <h3 className="text-white text-2xl font-bold mb-2">Complete Web Development Bootcamp</h3>
-               <div className="flex items-center gap-4 text-white/90 text-sm">
-                  <span className="flex items-center gap-1"><Clock size={14}/> 12h 30m</span>
-                  <span>⭐ Beginner</span>
+          <div className="flex-1 text-center md:text-left">
+            <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-6">
+               <div className="inline-flex items-center gap-2 bg-indigo-500/20 border border-indigo-500/30 px-4 py-1.5 rounded-full">
+                  <Star size={14} className="text-indigo-400 fill-indigo-400" />
+                  <span className="text-xs font-black uppercase tracking-widest text-indigo-300">
+                    {courseData?.category || "Uncategorized"}
+                  </span>
+               </div>
+               <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 px-4 py-1.5 rounded-full">
+                  <BarChart size={14} className="text-emerald-400" />
+                  <span className="text-xs font-black uppercase tracking-widest text-emerald-300">
+                    {courseData?.difficulty || "Beginner"}
+                  </span>
                </div>
             </div>
-          </div>
 
-          <div className="space-y-4">
-            <h4 className="font-bold text-gray-900">What you'll learn</h4>
-            <ul className="grid grid-cols-1 gap-2">
-               {["Build responsive websites", "Master React.js", "Deploy to production"].map((item,i)=>(
-                 <li key={i} className="flex items-center gap-2 text-gray-600 text-sm"><Check size={16} className="text-green-500"/> {item}</li>
-               ))}
-            </ul>
+            <h1 className="text-4xl md:text-5xl font-black mb-4 tracking-tight leading-tight">
+              {courseData?.title || "Untitled Course"}
+            </h1>
+            
+            <div className="flex flex-wrap justify-center md:justify-start gap-6 text-slate-400 font-bold text-sm">
+                <span className="flex items-center gap-2"><BookOpen size={18}/> {lessons.length} Lessons</span>
+                <span className="flex items-center gap-2"><HelpCircle size={18}/> {allQuizzes.length} Quizzes</span>
+                <span className="flex items-center gap-2"><Check size={18} className="text-emerald-400"/> Quality Checked</span>
+            </div>
           </div>
         </div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] -mr-48 -mt-48"></div>
+      </div>
 
-        {/* QUIZ PREVIEW PART */}
-        {/* <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
-                <HelpCircle size={24} />
+      {/* 2. LESSON SWITCHER */}
+      <div className="mb-10 bg-white p-2 rounded-3xl border border-slate-100 shadow-sm sticky top-4 z-40">
+        <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar py-1 px-1">
+          {lessons.map((lesson, idx) => {
+            const hasQuiz = allQuizzes.some(q => q.lessonId === lesson._id);
+            const isActive = activeLessonIdx === idx;
+            return (
+              <button
+                key={lesson._id || idx}
+                onClick={() => setActiveLessonIdx(idx)}
+                className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-sm font-bold transition-all whitespace-nowrap ${
+                  isActive ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-200 translate-y-[-2px]' : 'text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] ${isActive ? 'bg-white/20' : 'bg-slate-100 text-slate-400'}`}>
+                    {idx + 1}
+                </span>
+                {lesson.title}
+                {hasQuiz && <Check size={14} className={isActive ? "text-white" : "text-emerald-500"} />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          
+          {/* 3. VIDEO & MARKDOWN */}
+          <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
+            <h3 className="text-xl font-black text-slate-800 flex items-center gap-3 mb-6">
+              <PlayCircle size={24} className="text-indigo-500" /> Lesson Media
+            </h3>
+            {currentLesson?.video?.url ? (
+              <div key={currentLesson._id || activeLessonIdx} className="w-full">
+                <VideoPlayer 
+                  videoURL={currentLesson.video.url} 
+                  title={currentLesson.title} 
+                />
               </div>
-              <div>
-                <h3 className="text-lg font-black text-gray-900">{quizPreviewData.title}</h3>
-                <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">{quizPreviewData.questions.length} Questions Total</p>
+            ) : (
+              <div className="aspect-video rounded-[2rem] bg-slate-50 border-4 border-dashed border-slate-100 flex flex-col items-center justify-center text-slate-400">
+                <PlayCircle size={48} className="mb-4 opacity-20" />
+                <p className="font-bold">No video provided for this lesson</p>
+              </div>
+            )}
+
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mt-8">
+              <div className="p-4 border-b bg-slate-50 flex items-center justify-between">
+                <h3 className="font-bold text-slate-700 uppercase text-xs tracking-widest">Lesson Content</h3>
+              </div>
+              <div className="p-8 bg-white" data-color-mode="light">
+                <MarkdownPreview 
+                  source={currentLesson.contentMarkdown} 
+                  style={{ backgroundColor: 'white', color: '#1e293b' }}
+                />
               </div>
             </div>
           </div>
 
-          <div className="space-y-10">
-            {quizPreviewData.questions.map((q, qIndex) => (
-              <div key={q._id} className="relative pl-8 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-slate-50 before:rounded-full">
-                <div className="mb-4">
-                  <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1 block">Question {qIndex + 1}</span>
-                  <p className="text-gray-800 font-bold leading-relaxed">{q.questionText}</p>
-                </div>
-
-                {q.diagramURL && (
-                  <div className="mb-4 inline-block relative rounded-xl overflow-hidden border border-gray-100 group">
-                    <img src={q.diagramURL} alt="Diagram" className="max-h-48 w-auto object-cover" />
-                    <div className="absolute top-2 right-2 p-1.5 bg-black/50 backdrop-blur-md text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ImageIcon size={14} />
-                    </div>
+          {/* 5. QUIZ PREVIEW */}
+          {currentQuiz ? (
+            <div className="bg-white rounded-[3rem] p-8 md:p-12 border border-slate-100 shadow-sm">
+               <div className="flex items-center gap-4 mb-10">
+                  <div className="w-14 h-14 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg">
+                      <HelpCircle size={28} />
                   </div>
-                )}
+                  <div>
+                      <h4 className="text-2xl font-black text-slate-900">{currentQuiz.title}</h4>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Assessment Details</p>
+                  </div>
+               </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {q.options.map((option, oIndex) => (
-                    <div 
-                      key={oIndex} 
-                      className={`p-4 rounded-xl text-sm font-medium border transition-all flex justify-between items-center ${
-                        option.isCorrect 
-                        ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
-                        : 'bg-gray-50 border-gray-100 text-gray-500 opacity-70'
-                      }`}
-                    >
-                      <span>{option.optionText}</span>
-                      {option.isCorrect && <Check size={14} className="stroke-[4px]" />}
+               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+                  <div className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-2xl">
+                    <Star size={16} className="text-indigo-600 fill-indigo-600" />
+                    <span className="text-sm font-black text-indigo-700">Total Marks: {currentQuiz.totalMarks || 0}</span>
+                  </div>
+               </div>
+
+               <div className="space-y-16">
+                  {currentQuiz.questions.map((q, qIdx) => (
+                    <div key={qIdx} className="relative">
+                       <div className="flex flex-col md:flex-row gap-8">
+                          <div className="flex-none flex flex-col items-center gap-3">
+                            <span className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center font-black border-2">{qIdx + 1}</span>
+                            <span className="text-[10px] font-black uppercase tracking-tighter text-slate-400 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                              {q.score || 0} pts
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                             <p className="text-xl font-bold text-slate-800 mb-6 leading-tight">{q.questionText || q.qstnText}</p>
+                             
+                             {q.imgUrl && (
+                               <img src={q.imgUrl} alt="Quiz" className="mb-6 rounded-3xl max-h-72 object-cover border-8 border-slate-50 shadow-md" />
+                             )}
+
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                                {q.options.map((opt, oIdx) => {
+                                  const isCorrect = typeof opt === 'object' ? opt.isCorrect : q.correctIndex === oIdx;
+                                  const text = typeof opt === 'object' ? opt.optionText : opt;
+                                  return (
+                                    <div key={oIdx} className={`p-4 rounded-2xl border-2 flex items-center gap-3 font-bold text-sm ${isCorrect ? 'bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm' : 'bg-white border-slate-100 text-slate-400 opacity-60'}`}>
+                                        <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] ${isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                                           {String.fromCharCode(65 + oIdx)}
+                                        </span>
+                                        {text}
+                                    </div>
+                                  )
+                                })}
+                             </div>
+
+                             {(q.explanation || q.explntn) && (
+                               <div className="bg-amber-50/50 border border-amber-100 p-6 rounded-[2rem] flex gap-4">
+                                  <div className="flex-none w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center">
+                                    <Lightbulb size={20} />
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">Instructor Explanation</p>
+                                    <p className="text-sm font-bold text-amber-900/70 leading-relaxed italic">
+                                      "{q.explanation || q.explntn}"
+                                    </p>
+                                  </div>
+                               </div>
+                             )}
+                          </div>
+                       </div>
                     </div>
                   ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div> */}
-
-
-      </div>
-
-      {/* RIGHT: SETTINGS */}
-      <div className="space-y-6">
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-           <h3 className="font-bold text-gray-900 mb-4">Course Settings</h3>
-           
-           <div className="mb-4">
-             <label className="text-sm font-bold text-gray-700 block mb-2">Pricing</label>
-             <div className="flex items-center gap-4">
-               <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="price" className="text-indigo-600" defaultChecked /> Free</label>
-               <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="price" className="text-indigo-600" /> Paid</label>
-             </div>
-           </div>
-
-           <div className="mb-4">
-             <label className="text-sm font-bold text-gray-700 block mb-2">Language</label>
-             <select className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none"><option>English</option></select>
-           </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-           <div className="bg-indigo-50 p-4 rounded-xl mb-4 border border-indigo-100">
-              <p className="text-xs text-indigo-800 font-medium">ℹ️ Course Review: Usually takes 24-48 hours.</p>
-           </div>
-           <button className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold mb-3 hover:bg-indigo-700 flex items-center justify-center gap-2">
-              <Send size={18} /> Submit for Review
-           </button>
-           <button className="w-full bg-white border border-gray-200 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-50 flex items-center justify-center gap-2">
-              <Save size={18} /> Save as Draft
-           </button>
-        </div>
-      </div>
-    </div>
-    <div className='max-w-6xl mx-auto pb-20 font-sans px-4'>
-    <div className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm mb-10">
-          <div className="flex items-center justify-between mb-10 pb-6 border-b border-gray-50">
-            <div className="flex items-center gap-4">
-              <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-100">
-                <HelpCircle size={28} />
-              </div>
-              <div>
-                <h3 className="text-2xl font-black text-gray-900 leading-none mb-1">{quizPreviewData.title}</h3>
-                <p className="text-gray-400 text-xs font-bold uppercase tracking-[0.15em]">{quizPreviewData.questions.length} Questions Assessment</p>
-              </div>
+               </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-slate-50 rounded-[2.5rem] py-16 text-center border-2 border-dashed border-slate-200">
+                <AlertTriangle className="text-slate-300 mx-auto mb-3" size={40} />
+                <p className="text-slate-400 font-bold">No quiz assessment for this lesson.</p>
+            </div>
+          )}
+        </div>
 
-          <div className="space-y-12">
-            {quizPreviewData.questions.map((q, qIndex) => (
-              <div key={q._id} className="group">
-                <div className="flex gap-6">
-                  <div className="flex-none w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-lg font-black text-slate-300 transition-colors group-hover:bg-indigo-50 group-hover:text-indigo-400">
-                    {qIndex + 1}
-                  </div>
-                  
-                  <div className="flex-1">
-                    <p className="text-xl font-bold text-gray-800 mb-6 leading-relaxed">{q.questionText}</p>
-                    
-                    {q.diagramURL && (
-                      <div className="mb-8 rounded-3xl overflow-hidden border-4 border-slate-50 inline-block shadow-sm">
-                        <img src={q.diagramURL} alt="Diagram" className="max-h-64 w-auto" />
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {q.options.map((option, oIndex) => (
-                        <div 
-                          key={oIndex} 
-                          className={`group relative p-5 rounded-2xl text-sm font-bold border-2 transition-all flex items-center justify-between ${
-                            option.isCorrect 
-                            ? 'bg-emerald-50/50 border-emerald-200 text-emerald-700 shadow-sm' 
-                            : 'bg-white border-gray-50 text-gray-400'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] ${option.isCorrect ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
-                              {String.fromCharCode(65 + oIndex)}
-                            </span>
-                            {option.optionText}
-                          </div>
-                          {option.isCorrect && <div className="bg-emerald-500 p-1 rounded-full text-white"><Check size={12} strokeWidth={4} /></div>}
-                        </div>
-                      ))}
+        {/* SIDEBAR */}
+        <div className="space-y-6">
+            <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl">
+                <h3 className="font-black text-xl mb-6 flex items-center gap-3 text-indigo-400">
+                   <Rocket size={20} /> Launch Stats
+                </h3>
+                <div className="space-y-5">
+                    <div className="flex justify-between items-center text-sm font-bold">
+                        <span className="text-slate-500 uppercase tracking-tighter">Total Lessons</span>
+                        <span className="text-white">{lessons.length}</span>
                     </div>
-                  </div>
+                    <div className="flex justify-between items-center text-sm font-bold">
+                        <span className="text-slate-500 uppercase tracking-tighter">Total Quizzes</span>
+                        <span className="text-white">{allQuizzes.length}</span>
+                    </div>
+                    <div className="h-px bg-white/10 w-full" />
+                    <div className="flex items-center gap-3 text-emerald-400 font-black text-xs uppercase tracking-[0.2em]">
+                        <Check size={16}/> Ready to Publish
+                    </div>
                 </div>
-              </div>
-            ))}
-          </div>
-          </div>
+            </div>
 
-        <button onClick={onBack} className="text-gray-500 font-bold hover:text-gray-900">← Back</button>
+            {/* ✅ 2. UPDATED: Resource List with Download Buttons */}
+            {currentLesson.resources?.length > 0 && (
+              <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
+                  <h4 className="font-black text-slate-800 mb-4 flex items-center gap-2">
+                      <FileText size={18} className="text-orange-500"/> Lesson PDFs
+                  </h4>
+                  <div className="space-y-2">
+                    {currentLesson.resources.map((pdf, i) => (
+                      <button 
+                        key={i} 
+                        onClick={() => handleDownloadPDF(pdf.url, pdf.name)}
+                        className="w-full flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all group cursor-pointer"
+                      >
+                        <span className="text-xs font-bold text-slate-600 truncate max-w-[140px]" title={pdf.name}>
+                          {pdf.name}
+                        </span>
+                        <Download size={14} className="text-slate-300 group-hover:text-indigo-500"/>
+                      </button>
+                    ))}
+                  </div>
+              </div>
+            )}
+        </div>
       </div>
 
+      {/* FINAL FOOTER */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 p-6 z-50">
+          <div className="max-w-6xl mx-auto flex justify-between items-center">
+              <button onClick={onBack} className="flex items-center gap-2 text-slate-500 font-black hover:text-slate-900 transition-colors">
+                  <ChevronRight size={20} className="rotate-180" /> Back to Quizzes
+              </button>
+              <button onClick={onPublish} className="bg-indigo-600 hover:bg-indigo-700 text-white px-12 py-4 rounded-2xl font-black shadow-xl shadow-indigo-100 flex items-center gap-3 transform hover:scale-105 active:scale-95 transition-all">
+                  Go Live Now <Rocket size={20} />
+              </button>
+          </div>
+      </div>
     </div>
   );
 };
+
 export default Step5Publish;

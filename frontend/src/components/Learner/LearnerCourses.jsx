@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { 
-  BookOpen, Search, Bell, LogOut, Loader2
+  Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import API from "../../api/axios";
@@ -25,25 +25,51 @@ function LearnerCourses() {
   const [ongoingCourses, setOngoingCourses] = useState([]);
   const [completedCourses, setCompletedCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState('Student');
 
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMyCourses = async () => {
       try {
+        // Get user name from localStorage or API
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const user = JSON.parse(storedUser);
+          setUserName(user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName || user.name || 'Student');
+        }
+
         const res = await API.get("/api/learners/my-courses");
 
         const ongoing = [];
         const completed = [];
 
         res.data.forEach((item) => {
+          let instructorName = 'Upskillr Team';
+          if (item.instructor) {
+            if (typeof item.instructor === 'string') {
+              instructorName = item.instructor;
+            } else if (typeof item.instructor === 'object') {
+              if (item.instructor.firstName && item.instructor.lastName) {
+                instructorName = `${item.instructor.firstName} ${item.instructor.lastName}`;
+              } else if (item.instructor.name) {
+                instructorName = item.instructor.name;
+              } else if (item.instructor.firstName) {
+                instructorName = item.instructor.firstName;
+              }
+            }
+          }
+
           const formatted = {
             id: item._id,
             title: item.title,
-            instructor: item.instructor,
+            instructor: instructorName,
             lessonsCompleted: item.completedLessonsCount || 0,
             totalLessons: item.lessonsCount || 0,
-            thumbnail: item.thumbnail,
+            
+            // ✅ FIX: Check if thumbnail is an object and get .url
+            thumbnail: item.thumbnail?.url || item.thumbnail || "https://via.placeholder.com/300x200?text=No+Image",
+            
             progressPercent: item.progressPercent || 0
           };
 
@@ -53,7 +79,6 @@ function LearnerCourses() {
             ongoing.push(formatted);
           }
         });
-
 
         setOngoingCourses(ongoing);
         setCompletedCourses(completed);
@@ -129,7 +154,7 @@ function LearnerCourses() {
           completedCourses.length > 0 ? (
             <div className="space-y-4">
               {completedCourses.map((course) => (
-                <CompletedCard key={course.id} course={course} />
+                <CompletedCard key={course.id} course={course} userName={userName} />
               ))}
             </div>
           ) : <EmptyState type="completed" />
