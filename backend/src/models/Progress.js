@@ -8,21 +8,18 @@ const progressSchema = new mongoose.Schema(
       required: true,
       index: true
     },
-
     courseId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Course",
       required: true,
       index: true
     },
-
     completedLessons: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Lesson"
       }
     ],
-
     quizAttempts: [
       {
         quizId: {
@@ -30,24 +27,25 @@ const progressSchema = new mongoose.Schema(
           ref: "Quiz"
         },
         score: Number,
-        attemptedAt: Date
+        attemptedAt: Date,
+        // ✅ ADDED: Stores { "questionId": selectedOptionIndex }
+        answers: {
+          type: Map,
+          of: Number 
+        }
       }
     ],
-
     progressPercent: {
       type: Number,
       default: 0
     },
-
     lastAccessedLessonId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Lesson"
     },
-
     lastAccessedAt: {
       type: Date
     },
-
     completedAt: {
       type: Date
     }

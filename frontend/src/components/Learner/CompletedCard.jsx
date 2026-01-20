@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { 
   CheckCircle, Award, FileText, ArrowRight 
 } from 'lucide-react';
+import CertificateModal from './CertificateModal';
 
-const CompletedCard = ({ course }) => {
+const CompletedCard = ({ course, userName = "Student" }) => {
   const navigate = useNavigate();   // ✅ Must be inside the component
+  const [isCertificateOpen, setIsCertificateOpen] = useState(false);
 
   return (
     <div className="bg-white p-5 rounded-2xl border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-sm transition-all group">
@@ -29,7 +31,10 @@ const CompletedCard = ({ course }) => {
       </div>
 
       <div className="flex gap-3">
-        <button className="flex-1 md:flex-none px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-50 flex items-center justify-center gap-2">
+        <button 
+          onClick={() => setIsCertificateOpen(true)}
+          className="flex-1 md:flex-none px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-50 flex items-center justify-center gap-2"
+        >
           <FileText className="w-4 h-4" /> Certificate
         </button>
 
@@ -40,6 +45,13 @@ const CompletedCard = ({ course }) => {
           Open Course <ArrowRight className="w-4 h-4" />
         </button>
       </div>
+
+      <CertificateModal 
+        course={course}
+        userName={userName}
+        isOpen={isCertificateOpen}
+        onClose={() => setIsCertificateOpen(false)}
+      />
     </div>
   );
 };

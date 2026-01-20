@@ -31,6 +31,11 @@ app.use(express.urlencoded({ extended: true, limit:"150mb" }));
 // Auth routes
 app.use("/api/auth", authRoutes);
 
+
+//quiz routes
+app.use("/api",quizRoutes);
+//app.use("/api/quizzes", quizRoutes);
+
 // Course & lesson routes
 app.use("/api/courses", courseRoutes);
 app.use("/api/courses", lessonRoutes);
@@ -40,9 +45,6 @@ app.use("/api/instructor", instructorRoutes);
 app.use("/api/lessons", lessonRoutes);
 app.use("/api/learners",learnerRoutes);
 
-//quiz routes
-app.use("/api",quizRoutes);
-app.use("/api/quizzes", quizRoutes);
 
 //review routes
 app.use("/api/reviews", reviewRoutes);

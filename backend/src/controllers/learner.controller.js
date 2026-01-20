@@ -16,7 +16,11 @@ export const getMyCourses = async (req, res) => {
     const enrollments = await Enrollment.find({ userId })
       .populate({
         path: "courseId",
-        select: "title thumbnail category difficulty instructor"
+        select: "title thumbnail category difficulty instructorId",
+        populate: {
+          path: "instructorId",
+          select: "firstName lastName name"
+        }
       })
       .sort({ createdAt: -1 })
       .lean();
@@ -51,7 +55,9 @@ export const getMyCourses = async (req, res) => {
         _id: course._id,
         title: course.title,
         thumbnail: course.thumbnail || null,
-        instructor: course.instructor?.name || "Instructor",
+        instructor: course.instructorId?.firstName && course.instructorId?.lastName 
+          ? `${course.instructorId.firstName} ${course.instructorId.lastName}`
+          : course.instructorId?.name || "Upskillr Team",
         category: course.category,
         difficulty: course.difficulty,
 
