@@ -30,6 +30,11 @@ export const getMyCourses = async (req, res) => {
     for (const enrollment of enrollments) {
       const course = enrollment.courseId;
 
+      // ✅ FIX: Check if course exists. If deleted, skip this enrollment.
+      if (!course) {
+        continue; 
+      }
+
       // 2. Count total lessons in course
       const totalLessons = await Lesson.countDocuments({
         courseId: course._id

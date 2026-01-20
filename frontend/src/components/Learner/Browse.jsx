@@ -5,12 +5,18 @@ import { useNavigate } from 'react-router-dom';
 import CourseCard from './CourseCard';
 import CourseDrawer from './CourseDrawer';
 
+// Same Gradient List
 const THEME_GRADIENTS = [
-  "from-indigo-500 to-purple-500",
-  "from-fuchsia-500 to-pink-500",
-  "from-rose-500 to-orange-500",
-  "from-emerald-400 to-teal-600",
-  "from-sky-400 to-blue-600"
+  "bg-gradient-to-br from-indigo-500 to-purple-500",
+  "bg-gradient-to-br from-fuchsia-500 to-pink-500",
+  "bg-gradient-to-br from-rose-500 to-orange-500",
+  "bg-gradient-to-br from-emerald-400 to-teal-600",
+  "bg-gradient-to-br from-sky-400 to-blue-600",
+  "bg-gradient-to-br from-yellow-400 to-orange-500",
+  "bg-gradient-to-br from-green-400 to-lime-500",
+  "bg-gradient-to-br from-pink-400 to-rose-500",
+  "bg-gradient-to-br from-purple-400 to-indigo-500",
+  "bg-gradient-to-br from-red-400 to-pink-500"
 ];
 
 function Browse() {
@@ -24,14 +30,11 @@ function Browse() {
   const [enrolling, setEnrolling] = useState(false);
   const [enrolledCourses, setEnrolledCourses] = useState(new Set());
   
-  // Dropdown state
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // ✅ UPDATED CATEGORIES LIST HERE
   const categories = ['All Categories', 'Development', 'Marketing', 'Programming'];
 
-  // Close dropdown if clicked outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -42,14 +45,11 @@ function Browse() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 🔹 Load courses based on Category
   useEffect(() => {
     const getCourses = async () => {
       setLoading(true);
       try {
-        // If "All Categories" is selected, send empty string to fetch all
         const categoryParam = activeCategory === 'All Categories' ? '' : activeCategory;
-        
         const response = await API.get('/api/courses', {
           params: { category: categoryParam }
         });
@@ -63,21 +63,17 @@ function Browse() {
     getCourses();
   }, [activeCategory]);
 
-  // 🔹 Load enrolled courses
   useEffect(() => {
     const loadEnrollments = async () => {
       try {
         const res = await API.get("/api/learners/my-courses");
         const ids = new Set(res.data.map(c => c.courseId._id));
         setEnrolledCourses(ids);
-      } catch {
-        // Not logged in or no enrollments
-      }
+      } catch { }
     };
     loadEnrollments();
   }, []);
 
-  // 🔹 Enroll Handler
   const handleEnroll = async (courseId) => {
     try {
       setEnrolling(true);
@@ -91,7 +87,6 @@ function Browse() {
     }
   };
 
-  // 🔹 Filter courses based on Search Query
   const filteredCourses = courses.filter(course => 
     course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
     course.description?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -107,8 +102,6 @@ function Browse() {
 
         {/* SEARCH & CATEGORY BAR */}
         <section className="flex flex-col md:flex-row gap-4 mb-10">
-          
-          {/* Functional Search Bar */}
           <div className="relative flex-grow">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
             <input 
@@ -120,7 +113,6 @@ function Browse() {
             />
           </div>
 
-          {/* Custom Category Dropdown */}
           <div className="relative w-full md:w-64" ref={dropdownRef}>
             <button 
               onClick={() => setIsCategoryOpen(!isCategoryOpen)}
@@ -132,7 +124,6 @@ function Browse() {
               <ChevronDown size={18} className={`text-gray-400 transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Dropdown Menu */}
             {isCategoryOpen && (
               <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-2xl shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 <div className="py-1">
@@ -164,23 +155,30 @@ function Browse() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {filteredCourses.map((course, index) => (
-              <CourseCard 
-                key={course._id} 
-                course={{
-                  ...course,
-                  instructor: course.instructorId?.name || "Instructor",
-                  id: course._id,
-                  thumbnail: course.thumbnail?.url || course.thumbnail || "https://via.placeholder.com/300x200?text=No+Image",
-                  enrolled: enrolledCourses.has(course._id)
-                }} 
-                fallbackGradient={THEME_GRADIENTS[index % THEME_GRADIENTS.length]}
-                onQuickView={(course) => {
-                  setSelectedCourse(course);
-                  setIsDrawerOpen(true);
-                }}
-              />
-            ))}
+            {filteredCourses.map((course, index) => {
+               // ✅ LOGIC: Check for valid thumbnail
+               let thumbnail = course.thumbnail?.url || course.thumbnail;
+               if (thumbnail && thumbnail.includes("via.placeholder.com")) thumbnail = null;
+
+               return (
+                <CourseCard 
+                  key={course._id} 
+                  course={{
+                    ...course,
+                    instructor: course.instructorId?.name || "Instructor",
+                    id: course._id,
+                    thumbnail: thumbnail, // Pass null if placeholder
+                    enrolled: enrolledCourses.has(course._id)
+                  }} 
+                  // ✅ Pass the gradient here
+                  fallbackGradient={THEME_GRADIENTS[index % THEME_GRADIENTS.length]}
+                  onQuickView={(course) => {
+                    setSelectedCourse(course);
+                    setIsDrawerOpen(true);
+                  }}
+                />
+               )
+            })}
 
             <CourseDrawer 
               course={selectedCourse}
@@ -194,7 +192,7 @@ function Browse() {
             {!loading && filteredCourses.length === 0 && (
               <div className="col-span-full text-center py-20">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                   <Search className="text-gray-400" size={24} />
+                    <Search className="text-gray-400" size={24} />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900">No courses found</h3>
                 <p className="text-gray-500 mt-1">Try adjusting your search or category filter.</p>
