@@ -8,8 +8,6 @@ const Step2Thumbnail = ({ courseId,initialThumbnail,onUpdate, onNext, onBack }) 
 
   // --- 1. SYNC & RELOAD PROTECTION ---
   useEffect(() => {
-    // If we have an initialThumbnail from parent, use it
-    console.log("Initial Thumbnail:", initialThumbnail);
     if (initialThumbnail) {
       const thumbUrl = initialThumbnail.url || initialThumbnail;
     setPreview(thumbUrl);
@@ -51,8 +49,7 @@ const thumb = data.data?.thumbnail || data.thumbnail;
     setLoading(true);
     try {
       const { data } = await API.put(`/api/instructor/courses/${courseId}/thumbnail`, formData);
-      // data.url is the Cloudinary URL returned from backend
-      console.log("Thumbnail uploaded:", data.thumbnail);
+
       const newThumbnail=data.thumbnail;
       setPreview(newThumbnail.url);
       if (onUpdate) {

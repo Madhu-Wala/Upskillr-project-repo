@@ -1,13 +1,94 @@
-import { Search, Mail, MoreVertical, Filter } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Search, Mail, Loader, Download, User } from 'lucide-react';
+import API from '../../api/axios';
 
 const StudentList = () => {
-  const students = [
-    { id: 1, name: "Alice Johnson", email: "alice@example.com", course: "Web Dev Bootcamp", progress: 75, date: "Oct 24, 2023", status: "Active" },
-    { id: 2, name: "Mark Smith", email: "mark@example.com", course: "UI/UX Masterclass", progress: 30, date: "Oct 22, 2023", status: "Inactive" },
-    { id: 3, name: "Sarah Lee", email: "sarah@example.com", course: "Python for Data Science", progress: 100, date: "Oct 18, 2023", status: "Completed" },
-    { id: 4, name: "John Doe", email: "john@example.com", course: "Web Dev Bootcamp", progress: 12, date: "Oct 15, 2023", status: "Active" },
-    { id: 5, name: "Emma Wilson", email: "emma@design.com", course: "UI/UX Masterclass", progress: 0, date: "Today", status: "Active" },
-  ];
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // 1. Fetch Real Data
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setLoading(true);
+        const response = await API.get('/api/instructor/courses');
+        const courses = response.data;
+
+        // Flatten the data
+        const allStudents = courses.flatMap(course => {
+          // Priority 1: Use actual student data if available
+          if (Array.isArray(course.students) && course.students.length > 0) {
+            return course.students.map(student => ({
+              // ✅ FIX: Combine Course ID + Student ID to ensure uniqueness across different courses
+              id: `${course._id}-${student._id}`, 
+              name: student.name || "Unknown Student",
+              email: student.email || "No email",
+              course: course.title || "Untitled Course",
+              date: student.enrolledAt ? new Date(student.enrolledAt).toLocaleDateString() : "Recently",
+            }));
+          } 
+          
+          // Priority 2: Fallback ONLY if student data is missing but count > 0
+          else if (course.enrollmentsCount > 0) {
+            return Array.from({ length: course.enrollmentsCount }).map((_, i) => ({
+              id: `${course._id}-placeholder-${i}`,
+              name: `Enrolled Student ${i + 1}`, 
+              email: "details@hidden.com",       
+              course: course.title || "Untitled Course",
+              date: "Recently",
+              isPlaceholder: true 
+            }));
+          }
+
+          // No students found
+          return [];
+        });
+
+        setStudents(allStudents);
+      } catch (error) {
+        console.error("Failed to fetch students:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
+
+  // 2. Filter Logic (Safe & Case-insensitive)
+  const filteredStudents = students.filter(student => {
+    const query = searchQuery.toLowerCase();
+    const name = (student.name || "").toLowerCase();
+    const email = (student.email || "").toLowerCase();
+    const course = (student.course || "").toLowerCase();
+
+    return name.includes(query) || email.includes(query) || course.includes(query);
+  });
+
+  // 3. Export to CSV
+  const handleExportCSV = () => {
+    const headers = ["Student Name,Email,Course,Enrolled Date"];
+    const rows = filteredStudents.map(s => 
+      `"${s.name}","${s.email}","${s.course}","${s.date}"`
+    );
+    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "my_students.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader className="animate-spin text-indigo-600" size={32} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -15,14 +96,14 @@ const StudentList = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
            <h1 className="text-2xl font-bold text-gray-900">Enrolled Students</h1>
-           <p className="text-gray-500 text-sm mt-1">Manage your {students.length} students and track their progress.</p>
+           <p className="text-gray-500 text-sm mt-1">Manage your {students.length} students.</p>
         </div>
         <div className="flex gap-3">
-           <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50">
-             <Filter size={16} /> Filter
-           </button>
-           <button className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200">
-             Export CSV
+           <button 
+             onClick={handleExportCSV}
+             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-colors"
+           >
+             <Download size={16} /> Export CSV
            </button>
         </div>
       </div>
@@ -33,7 +114,9 @@ const StudentList = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input 
             type="text" 
-            placeholder="Search by name or email..." 
+            placeholder="Search by name, email, or course..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-transparent text-sm focus:outline-none text-gray-700 placeholder-gray-400"
           />
         </div>
@@ -46,52 +129,45 @@ const StudentList = () => {
             <tr>
               <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Student Name</th>
               <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Course</th>
-              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Progress</th>
               <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Enrolled</th>
-              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-4"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {students.map((student) => (
-              <tr key={student.id} className="hover:bg-gray-50 transition-colors group">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 flex items-center justify-center font-bold text-xs border border-white shadow-sm">
-                      {student.name.charAt(0)}
+            {filteredStudents.length > 0 ? (
+              filteredStudents.map((student) => (
+                <tr key={student.id} className="hover:bg-gray-50 transition-colors group">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border border-white shadow-sm ${student.isPlaceholder ? 'bg-gray-100 text-gray-400' : 'bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600'}`}>
+                        {student.isPlaceholder ? <User size={14} /> : student.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className={`font-bold text-sm ${student.isPlaceholder ? 'text-gray-400 italic' : 'text-gray-900'}`}>
+                          {student.name}
+                        </p>
+                        <p className="text-xs text-gray-400 flex items-center gap-1 group-hover:text-indigo-500 transition-colors">
+                          <Mail size={10} /> {student.email}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold text-sm text-gray-900">{student.name}</p>
-                      <p className="text-xs text-gray-400 flex items-center gap-1 group-hover:text-indigo-500 transition-colors"><Mail size={10} /> {student.email}</p>
-                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600 font-medium">{student.course}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500 font-medium">{student.date}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="3" className="px-6 py-12 text-center">
+                  <div className="flex flex-col items-center justify-center text-gray-400">
+                    <User size={48} className="mb-2 text-gray-200" />
+                    <p className="font-medium text-gray-500">No students found</p>
+                    <p className="text-sm mt-1">
+                      {searchQuery ? "Try adjusting your search terms." : "Once students enroll in your courses, they will appear here."}
+                    </p>
                   </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600 font-medium">{student.course}</td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-24 bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                      <div className={`h-full rounded-full ${student.progress === 100 ? 'bg-emerald-500' : 'bg-indigo-600'}`} style={{ width: `${student.progress}%` }}></div>
-                    </div>
-                    <span className="text-xs font-bold text-gray-500 w-8">{student.progress}%</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-500 font-medium">{student.date}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border ${
-                    student.status === 'Active' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                    student.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                    'bg-gray-50 text-gray-500 border-gray-100'
-                  }`}>
-                    {student.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button className="p-2 hover:bg-gray-200 rounded-lg text-gray-400 hover:text-gray-900 transition-colors">
-                    <MoreVertical size={16} />
-                  </button>
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
+// 1. IMPORT CircleUser icon
+import { Star, ChevronLeft, ChevronRight, CircleUser } from 'lucide-react';
 import API from '../../api/axios';
 
 const TestimonialCarousel = () => {
@@ -10,7 +11,6 @@ const TestimonialCarousel = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Check screen size for animation offsets
   useEffect(() => {
     const checkRes = () => setIsMobile(window.innerWidth < 768);
     checkRes();
@@ -18,35 +18,30 @@ const TestimonialCarousel = () => {
     return () => window.removeEventListener('resize', checkRes);
   }, []);
 
-  // Fetch recent high-rated reviews from database
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
         setLoading(true);
         const response = await API.get('/api/reviews/recent-high-rated');
-        console.log('API Response:', response.data);
         
-        // Transform API data to component format
         const formattedTestimonials = response.data.map((review) => ({
           id: review._id,
           name: review.userId?.name || 'Anonymous',
           role: review.courseId?.title || 'Course Learner',
-          image: review.userId?.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+          // 2. Removed 'image' property from here as we use a default icon now
           text: review.feedback || 'Great course!',
           rating: review.rating
         }));
         
-        console.log('Formatted testimonials:', formattedTestimonials);
         setTestimonials(formattedTestimonials);
       } catch (error) {
         console.error('Error fetching testimonials:', error.response || error.message);
-        // Fallback testimonials if API fails
+        // Fallback data
         setTestimonials([
           {
             id: 1,
             name: "Sarah Johnson",
             role: "Frontend Developer at Google",
-            image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80",
             text: "UpSkillr transformed my career! The bite-sized lessons fit perfectly into my schedule, and I landed my dream job.",
             rating: 5
           },
@@ -54,7 +49,6 @@ const TestimonialCarousel = () => {
             id: 2,
             name: "Michael Chen",
             role: "UX Designer at Airbnb",
-            image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
             text: "The real-time progress tracking kept me motivated throughout my learning journey.",
             rating: 5
           },
@@ -62,7 +56,6 @@ const TestimonialCarousel = () => {
             id: 3,
             name: "Emily Rodriguez",
             role: "Data Analyst at Meta",
-            image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80",
             text: "Best investment in my career! The courses are practical, engaging, and taught by industry experts.",
             rating: 5
           }
@@ -84,7 +77,6 @@ const TestimonialCarousel = () => {
     next: (index + 1) % testimonials.length
   };
 
-  // Auto-rotate carousel
   useEffect(() => {
     if (isHovered || testimonials.length === 0) return;
     const interval = setInterval(() => {
@@ -159,11 +151,11 @@ const TestimonialCarousel = () => {
                 </p>
 
                 <div className="flex items-center gap-4">
-                  <img 
-                    src={testimonials[itemIndex].image} 
-                    alt={testimonials[itemIndex].name} 
-                    className="w-10 h-10 md:w-14 md:h-14 rounded-full object-cover ring-4 ring-indigo-50"
-                  />
+                  {/* 3. REPLACED <img /> with Default Icon Container */}
+                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-indigo-50 flex items-center justify-center ring-4 ring-indigo-50">
+                    <CircleUser className="text-indigo-300 w-full h-full p-1" />
+                  </div>
+                  
                   <div className="text-left">
                     <h4 className="font-black text-slate-900 text-sm md:text-lg leading-tight">{testimonials[itemIndex].name}</h4>
                     <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-widest">{testimonials[itemIndex].role}</p>

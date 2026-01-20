@@ -7,15 +7,16 @@ import HeroSection from "./LandingComponents/HeroSection";
 import CourseSection from "./LandingComponents/CourseSection";
 
 function Landing(){
-    return <>
-    <Navbar/>
-    <HeroSection/>
-    <CourseSection/>
+    return (
+      <>
+        <Navbar/>
+        <HeroSection/>
+        <CourseSection/>
         <FeaturesSection/>
         <TestimonialCarousel/>
         <CTASection/>
         <Footer/>
-
-    </>
+      </>
+    );
 }
 export default Landing;

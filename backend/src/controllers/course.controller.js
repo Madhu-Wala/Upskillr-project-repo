@@ -30,7 +30,6 @@ export const getAllCourses = async (req, res) => {
       })
     );
 
-    console.log(`COURSES FOUND: ${coursesWithLessons.length}`);
     res.status(200).json(coursesWithLessons);
 
   } catch (error) {

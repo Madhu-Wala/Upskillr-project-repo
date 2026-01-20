@@ -20,7 +20,6 @@ const ForgotPassword = () => {
       });
 
       // 2. If successful, show the success state
-      console.log(response.data.message);
       setIsSubmitted(true);
     } catch (err) {
       // 3. Handle errors (like email not found or server down)

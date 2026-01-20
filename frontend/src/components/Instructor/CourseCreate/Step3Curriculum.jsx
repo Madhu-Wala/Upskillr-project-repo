@@ -65,28 +65,7 @@ const Step3Curriculum = ({ courseId, initialLessons,onRefresh, onNext, onBack })
   }, [loading, formData, editingId]);
 
   
-  // REPLACE (Immediate for Editing)
-// const handleReplaceVideo = async (lessonId, file) => {
-//   if (!file) return;
-//   const vData = new FormData();
-//   vData.append("video", file); // Matches uploadMedia.single("file")
 
-//   try {
-//     setLoading(true);
-//     // Note: We use PUT here because your backend route for replacement is .put
-//     const { data } = await API.put(`/api/instructor/lessons/${lessonId}/video`, vData);
-//     console.log("Video replaced:", data.video);
-//     const updatedVideo = data.video || data.data?.video;
-//     setLessons(prev => prev.map(l => 
-//       l._id === lessonId ? { ...l, video: updatedVideo } : l
-//     ));
-//     alert("Video replaced!");
-//   } catch (err) {
-//     alert("Video replacement failed");
-//   } finally {
-//     setLoading(false);
-//   }
-// };
 const handleReplaceVideo = async (lessonId, file, isNewUpload = false) => {
   if (!file) return;
   const vData = new FormData();
@@ -100,7 +79,7 @@ const handleReplaceVideo = async (lessonId, file, isNewUpload = false) => {
       ? await API.post(`/api/instructor/lessons/${lessonId}/video`, vData)
       : await API.put(`/api/instructor/lessons/${lessonId}/video`, vData);
 
-    console.log("Response:", response.data);
+
     
     const updatedVideo = response.data.video || response.data.data?.video;
     
@@ -243,7 +222,7 @@ const handleDeleteResource = async (lessonId, resourceId) => {
       setFormData({ title: "", contentMarkdown: "", videoFile: null, pdfFiles: [] });
       alert(isEdit ? "Lesson updated!" : "Lesson added!");
     } catch (err) {
-      console.log(err);
+
       alert("Error saving lesson");
     } finally {
       setLoading(false);

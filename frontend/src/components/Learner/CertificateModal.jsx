@@ -149,7 +149,7 @@ const CertificateModal = ({ course, userName = "Student", isOpen, onClose }) => 
                     <p style={{ color: '#78350f', fontSize: '14px', fontWeight: '700' }}>
                       {(() => {
                         const instructor = course?.instructor;
-                        console.log('Instructor value:', instructor, 'Type:', typeof instructor);
+
                         return instructor && instructor !== 'undefined' && instructor !== 'Upskillr Team' ? instructor : 'Upskillr Team';
                       })()}
                     </p>

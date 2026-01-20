@@ -1,48 +1,40 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Eye, EyeOff, LogIn,Loader2 } from 'lucide-react';
+import { Mail, Eye, EyeOff, LogIn, Loader2 } from 'lucide-react';
 import API from '../api/axios';
+import logo from '../assets/logo.png';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const nav=useNavigate();
+  const nav = useNavigate();
 
-  const [email,setEmail]=useState("");
-  const [password,setPassword]=useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleSubmit=async (e)=>{
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    // Handle login logic here
     try {
-      // 1. Send request to your backend controller login route
       const response = await API.post('/api/auth/login', {
         email,
         password
       });
 
-      // 2. Extract user data and token from backend response
       const { token, role, name } = response.data;
 
-      // 3. Store Token and User Info in LocalStorage (or Cookies)
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify({ name, role }));
 
-      // 4. Role-based Redirection
-      // if (role === 'admin') {
-      //   nav('/admin-dashboard');
-      // } 
-     if (role === 'instructor') {
+      if (role === 'instructor') {
         nav('/Instructor');
       } else {
         nav('/Learner');
       }
 
     } catch (err) {
-      // Handle errors from the backend (401, 400, etc.)
       setError(err.response?.data?.message || "Something went wrong. Try again.");
     } finally {
       setLoading(false);
@@ -63,14 +55,16 @@ const Login = () => {
         
         {/* Header / Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 mb-4">
-            {/* Dummy Image Placeholder */}
+          
+          <div className="w-20 h-20 flex items-center justify-center mb-4">
             <img 
-              src="https://via.placeholder.com/40" 
+              src={logo} 
               alt="Logo" 
-              className="w-10 h-10 object-contain brightness-0 invert" 
+              // CHANGE MADE HERE: Added 'rounded-2xl' to curve the edges of the logo
+              className="w-full h-full object-contain rounded-2xl" 
             />
           </div>
+
           <h1 className="text-3xl font-bold text-gray-800">Upskillr</h1>
           <p className="text-gray-500 mt-2 text-sm font-medium">
             Welcome back! Please sign in to continue
@@ -79,7 +73,6 @@ const Login = () => {
 
         {/* Form */}
         <form className="space-y-5" onSubmit={handleSubmit}>
-          {/* Show Error Message if it exists */}
           {error && (
             <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-medium border border-red-100 animate-shake">
               {error}
@@ -145,28 +138,6 @@ const Login = () => {
             )}
             {loading ? "Signing in..." : "Sign In"}
           </button>
-
-          {/* Divider */}
-          {/* <div className="relative flex items-center py-2">
-            <div className="flex-grow border-t border-gray-100"></div>
-            <span className="flex-shrink mx-4 text-gray-400 text-xs font-medium uppercase tracking-wider">
-              or continue with
-            </span>
-            <div className="flex-grow border-t border-gray-100"></div>
-          </div>
-
-          {/* Google Button *}
-          <button
-            type="button"
-            className="w-full py-3.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-2xl font-semibold flex items-center justify-center gap-3 transition-colors active:scale-[0.98]"
-          >
-            <img 
-              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
-              alt="Google" 
-              className="w-5 h-5" 
-            />
-            Continue with Google
-          </button>*/}
         </form> 
 
         {/* Sign Up Link */}
@@ -180,7 +151,7 @@ const Login = () => {
         </div>
         <div className="text-center mt-4">
           <button
-            onClick={()=>nav("/")}
+            onClick={() => nav("/")}
             className="px-5 py-2.5 w-20 cursor-pointer !mt-4 text-[15px] font-medium bg-indigo-600 hover:bg-indigo-800 text-white rounded-md"
           >
             Back

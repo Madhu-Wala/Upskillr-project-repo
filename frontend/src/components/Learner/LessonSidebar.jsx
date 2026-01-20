@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlayCircle, CheckCircle, Lock } from 'lucide-react'; // ✅ Using CheckCircle for the clean tick
+import { PlayCircle, CheckCircle } from 'lucide-react'; // Removed unused imports
 
 const LessonSidebar = ({ lessons, activeLessonId, completedLessonIds = [], onLessonSelect }) => {
   
@@ -30,7 +30,6 @@ const LessonSidebar = ({ lessons, activeLessonId, completedLessonIds = [], onLes
               <div className={`mt-0.5 shrink-0 transition-colors duration-300
                 ${isCompleted ? 'text-emerald-500' : isActive ? 'text-indigo-600' : 'text-gray-300'}
               `}>
-                {/* ✅ FIXED: Simple Green Tick Icon */}
                 {isCompleted ? (
                   <CheckCircle size={20} /> 
                 ) : (
@@ -44,9 +43,7 @@ const LessonSidebar = ({ lessons, activeLessonId, completedLessonIds = [], onLes
                 `}>
                   {index + 1}. {lesson.title}
                 </p>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                  {lesson.duration || "10 min"}
-                </span>
+                {/* REMOVED: Duration text span was here */}
               </div>
             </button>
           );
