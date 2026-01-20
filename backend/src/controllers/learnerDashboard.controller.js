@@ -7,52 +7,65 @@ export const getLearnerDashboard = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const enrollments = await Enrollment.find({ userId }).populate("courseId");
-    const progresses = await Progress.find({ userId });
+    // 1. Fetch all enrollments for this user
+    const enrollments = await Enrollment.find({ userId })
+      .populate('courseId', 'title thumbnail') 
+      .lean();
 
-    let totalLessonsDone = 0;
-    let certificates = 0;
-    let totalWatchTime = 0;
-    let continueLearning = [];
+    let lessonsDone = 0;
+    let certificates = 0; // ✅ Initialize certificate count
+    let dayStreak = 0;    // Placeholder for streak logic
 
-    for (const enroll of enrollments) {
-      const course = enroll.courseId;
+    const continueLearning = [];
 
-      const lessonCount = await Lesson.countDocuments({ courseId: course._id });
-      const progress = progresses.find(
-        p => p.courseId.toString() === course._id.toString()
-      );
+    // 2. Loop through every course the user is enrolled in
+    for (const enrollment of enrollments) {
+      const course = enrollment.courseId;
 
-      if (progress) {
-        totalLessonsDone += progress.completedLessons.length;
-        totalWatchTime += progress.watchTime || 0;
+      // Safety check: Skip if course was deleted
+      if (!course) continue;
 
-        if (progress.completedLessons.length === lessonCount) {
-          certificates++;
-        } else {
-          continueLearning.push({
-            courseId: course._id,
-            title: course.title,
-            thumbnail: course.thumbnail?.url,
-            completed: progress.completedLessons.length,
-            total: lessonCount,
-            lastLesson: progress.lastAccessedLessonId
-          });
-        }
+      // Get user's progress for this course
+      const progress = await Progress.findOne({ userId, courseId: course._id }).lean();
+      
+      const completedCount = progress?.completedLessons?.length || 0;
+      
+      // Get actual total lessons in this course
+      const totalLessons = await Lesson.countDocuments({ courseId: course._id });
+
+      lessonsDone += completedCount;
+
+      // ✅ CERTIFICATE LOGIC:
+      // If the course has lessons AND the user has completed ALL of them
+      if (totalLessons > 0 && completedCount === totalLessons) {
+        certificates++;
+      }
+      
+      // ✅ CONTINUE LEARNING LOGIC:
+      // Only show in "Continue Learning" if started but NOT finished
+      else if (totalLessons > 0 && completedCount < totalLessons) {
+        continueLearning.push({
+          courseId: course._id,
+          title: course.title,
+          thumbnail: course.thumbnail,
+          completed: completedCount,
+          total: totalLessons
+        });
       }
     }
 
-    res.json({
+    // 3. Send Response
+    res.status(200).json({
       stats: {
-        hoursLearned: Math.round(totalWatchTime / 3600),
-        lessonsDone: totalLessonsDone,
-        certificates,
-        dayStreak: req.user.streak || 1
+        lessonsDone,
+        certificates, // ✅ Sends the calculated count to frontend
+        dayStreak
       },
       continueLearning
     });
 
-  } catch (err) {
-    res.status(500).json({ message: "Dashboard load failed" });
+  } catch (error) {
+    console.error("DASHBOARD ERROR:", error);
+    res.status(500).json({ message: "Failed to load dashboard data" });
   }
 };

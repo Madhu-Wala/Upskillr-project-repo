@@ -38,7 +38,6 @@ const MyCourses = () => {
         setLoading(true);
         const response=await API.get('/api/instructor/courses');
         setCourses(response.data);
-        console.log("Fetched courses:", response.data);
       }catch(err){
         console.error("Failed to fetch courses:", err);
         setError("Failed to load courses. Please try again later.");
@@ -165,7 +164,7 @@ const MyCourses = () => {
               <option>All Categories</option>
               
               <option>Development</option>
-              <option>Marketting</option>
+              <option>Marketing</option>
               <option>Programming</option>
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
@@ -189,7 +188,6 @@ const MyCourses = () => {
       </div>
 
       {/* 3. COURSE GRID */}
-      {/* 3. COURSE GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredCourses.length > 0 ? (
           filteredCourses.map((course, index) => (
@@ -210,10 +208,13 @@ const MyCourses = () => {
               <div className="p-6">
                 <div className="flex justify-between items-start mb-3">
                   <h3 className="font-bold text-lg text-gray-900 leading-tight line-clamp-1">{course.title}</h3>
-                  <div className="flex items-center gap-1 text-amber-400 text-sm font-bold">
-                    <Star size={16} fill="currentColor" />
-                    <span className="text-gray-700">{course.rating || "N/A"}</span>
-                  </div>
+                  {/* ✅ FIX: Only render the rating component if course.rating exists */}
+                  {course.rating && (
+                    <div className="flex items-center gap-1 text-amber-400 text-sm font-bold">
+                      <Star size={16} fill="currentColor" />
+                      <span className="text-gray-700">{course.rating}</span>
+                    </div>
+                  )}
                 </div>
                 <p className="text-gray-500 text-xs mb-5 line-clamp-2">{course.description}</p>
 

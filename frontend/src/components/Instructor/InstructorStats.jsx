@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Users, Star, BookOpen, FileVideo, TrendingUp, Loader } from 'lucide-react';
-// 1. Import Recharts components
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import API from '../../api/axios';
 
@@ -11,7 +10,6 @@ const InstructorStats = () => {
     activeCourses: 0,
     totalLessons: 0
   });
-  // 2. Add state for the graph
   const [graphData, setGraphData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,6 +18,7 @@ const InstructorStats = () => {
       try {
         setLoading(true);
         
+        // Parallel fetch for speed
         const [coursesRes, reviewsRes] = await Promise.allSettled([
           API.get('/api/instructor/courses'),
           API.get('/api/instructor/reviews')
@@ -30,30 +29,39 @@ const InstructorStats = () => {
         let studentCount = 0;
         let chartData = [];
 
+        // 1. Process Courses Data
         if (coursesRes.status === 'fulfilled') {
-          const courses = coursesRes.value.data;
-          courseCount = courses.length;
+          const allCourses = coursesRes.value.data;
           
-          courses.forEach(course => {
-            // Stats Calculations
+          // ✅ FIX: Strict Filter for Published Courses (Case-Insensitive)
+          // This ensures "Draft" or "Archived" courses are ignored in stats
+          const publishedCourses = allCourses.filter(c => c.status?.toLowerCase() === 'published');
+          
+          courseCount = publishedCourses.length;
+          
+          // Loop through ONLY published courses
+          publishedCourses.forEach(course => {
+            // Count Lessons
             if (course.lessonsCount !== undefined) {
               lessonCount += course.lessonsCount;
             } else if (Array.isArray(course.lessons)) {
               lessonCount += course.lessons.length;
             }
 
+            // Count Students
             const currentEnrolled = course.enrollmentsCount || (Array.isArray(course.students) ? course.students.length : 0);
             studentCount += currentEnrolled;
 
-            // 3. Prepare Graph Data (Course Title vs. Student Count)
+            // Prepare Graph Data
             chartData.push({
-              name: course.title.length > 15 ? course.title.substring(0, 15) + '...' : course.title, // Truncate long names
+              name: course.title.length > 15 ? course.title.substring(0, 15) + '...' : course.title, // Truncate long titles
               students: currentEnrolled,
               lessons: course.lessonsCount || 0
             });
           });
         }
 
+        // 2. Process Reviews Data
         let avgRating = 0;
         if (reviewsRes.status === 'fulfilled') {
           const reviews = reviewsRes.value.data;
@@ -63,8 +71,9 @@ const InstructorStats = () => {
           }
         }
 
+        // 3. Update State
         setStatsData({
-          activeCourses: courseCount,
+          activeCourses: courseCount, 
           totalLessons: lessonCount,
           totalStudents: studentCount,
           averageRating: avgRating
@@ -128,6 +137,7 @@ const InstructorStats = () => {
         <p className="text-gray-500 mt-1">Welcome back! Here's how your courses are performing today.</p>
       </div>
 
+      {/* Stats Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <div key={index} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200">
@@ -145,7 +155,7 @@ const InstructorStats = () => {
         ))}
       </div>
       
-      {/* 4. FUNCTIONAL CHART SECTION */}
+      {/* Chart Section */}
       <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
         <div className="flex items-center gap-3 mb-8">
           <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
@@ -153,7 +163,7 @@ const InstructorStats = () => {
           </div>
           <div>
             <h3 className="text-lg font-bold text-gray-900">Student Enrollment per Course</h3>
-            <p className="text-sm text-gray-500">Performance overview across all your published courses</p>
+            <p className="text-sm text-gray-500">Performance overview across all your <strong>published</strong> courses</p>
           </div>
         </div>
 
@@ -188,7 +198,7 @@ const InstructorStats = () => {
           </div>
         ) : (
           <div className="h-[200px] flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-100 rounded-2xl">
-            <p>No enrollment data available to display yet.</p>
+            <p>No published courses with enrollment data available.</p>
           </div>
         )}
       </div>

@@ -145,7 +145,7 @@ function LearnerCourses() {
                 <OngoingCard 
                   key={course.id}
                   course={course}
-                  themeColor={COURSE_THEMES.gradients[index % COURSE_THEMES.gradients.length]}
+                  index={index}
                 />
               ))}
             </div>

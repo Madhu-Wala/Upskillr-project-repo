@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // 1. Import useNavigate
-import { GraduationCap, Star, Clock, BarChart } from "lucide-react";
+import { useNavigate } from 'react-router-dom'; 
+import { Star, Clock, BarChart } from "lucide-react";
 import API from '../../api/axios'; 
 
-// CourseCard Component
+// CourseCard Component (No changes needed here, just kept for context)
 const CourseCard = ({ image, category, title, description, lessons, level, rating }) => {
-  const navigate = useNavigate(); // 2. Initialize navigate hook
+  const navigate = useNavigate(); 
 
   return (
     <div className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all hover:-translate-y-1 border border-gray-100 group h-full flex flex-col">
@@ -43,7 +43,6 @@ const CourseCard = ({ image, category, title, description, lessons, level, ratin
           </div>
         </div>
         
-        {/* 3. Add onClick event to redirect to Signup */}
         <button 
           onClick={() => navigate('/signup')}
           className="w-full py-3 bg-indigo-50 text-indigo-600 font-bold rounded-xl hover:bg-indigo-600 hover:text-white transition-all mt-auto"
@@ -61,10 +60,17 @@ function CourseSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchLatestCourses = async () => {
       try {
+        // 1. Fetch all courses (or a larger page)
         const response = await API.get('/api/courses'); 
-        const courseData = response.data.courses || response.data || [];
+        let courseData = response.data.courses || response.data || [];
+
+        // 2. SORTING LOGIC: Sort by 'createdAt' descending (Newest first)
+        // This ensures we always get the absolute latest courses
+        courseData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        // 3. Take only the top 3 latest
         setCourses(courseData.slice(0, 3));
       } catch (error) {
         console.error("Failed to fetch courses:", error);
@@ -73,7 +79,13 @@ function CourseSection() {
       }
     };
 
-    fetchCourses();
+    fetchLatestCourses();
+
+    // 4. OPTIONAL: Auto-refresh every 30 seconds to keep data fresh
+    const interval = setInterval(fetchLatestCourses, 30000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -81,30 +93,34 @@ function CourseSection() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
           <span className="px-4 py-2 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs uppercase tracking-wider">
-            Popular Courses
+            Latest Arrivals
           </span>
           <h2 className="text-4xl font-bold text-gray-900 mt-4 mb-4">
-            Start Learning Today
+            Freshly Added Courses
           </h2>
           <p className="text-gray-500 max-w-2xl mx-auto">
-            Choose from our curated collection of courses designed by industry experts to help you level up your skills.
+            Check out the newest additions to our curriculum.
           </p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {loading ? (
-            <div className="col-span-3 text-center text-gray-400 py-10">Loading...</div>
-          ) : courses.map((course) => (
-            <CourseCard 
-              key={course._id || course.id}
-              image={course.thumbnail}
-              category={course.category}
-              title={course.title}
-              description={course.description}
-              lessons={course.duration}
-              level={course.level}
-              rating={course.rating}
-            />
-          ))}
+            <div className="col-span-3 text-center text-gray-400 py-10">Loading latest courses...</div>
+          ) : courses.length > 0 ? (
+            courses.map((course) => (
+              <CourseCard 
+                key={course._id || course.id}
+                image={course.thumbnail?.url || course.thumbnail} // Handle object or string
+                category={course.category}
+                title={course.title}
+                description={course.description}
+                lessons={course.duration ? `${course.duration} hours` : "Self-paced"}
+                level={course.difficulty || course.level}
+                rating={course.rating}
+              />
+            ))
+          ) : (
+             <div className="col-span-3 text-center text-gray-400 py-10">No courses available yet.</div>
+          )}
         </div>
       </div>
     </section>
