@@ -1,24 +1,24 @@
-import { useState } from "react"; // 👈 Added useState
+import { useState } from "react"; 
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { Bell, GraduationCap, Search, LogOut, Menu, X } from "lucide-react"; // 👈 Added Menu & X icons
+import { LogOut, Menu, X, User } from "lucide-react"; 
+import logo from '../../assets/logo.png'; 
 
 const InstructorDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // 👈 State for mobile menu
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
 
   const handleSignOut = () => {
     navigate("/");
   };
 
-  // Helper to determine if a link is active
   const getLinkClass = (path, exact = false) => {
     const isActive = exact 
       ? location.pathname === path 
       : location.pathname.includes(path);
       
     return isActive 
-      ? "text-indigo-600 font-bold block py-2" // Added 'block py-2' for mobile spacing
+      ? "text-indigo-600 font-bold block py-2" 
       : "text-gray-500 hover:text-gray-900 font-medium block py-2";
   };
 
@@ -33,13 +33,17 @@ const InstructorDashboard = () => {
             
             {/* Logo */}
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
-                <GraduationCap size={20} />
+              <div className="w-8 h-8 flex items-center justify-center">
+                <img 
+                  src={logo} 
+                  alt="Upskillr Logo" 
+                  className="w-full h-full object-contain rounded-lg" 
+                />
               </div>
               <span className="font-bold text-xl text-gray-900">UpSkillr</span>
             </div>
 
-            {/* Desktop Navigation Links (Hidden on Mobile) */}
+            {/* Desktop Navigation Links */}
             <div className="hidden md:flex items-center gap-6 text-sm">
               <Link to="/Instructor" className={getLinkClass("/Instructor", true)}>Dashboard</Link>
               <Link to="/Instructor/my-courses" className={getLinkClass("my-courses")}>Courses</Link>
@@ -48,35 +52,16 @@ const InstructorDashboard = () => {
             </div>
           </div>
 
-          {/* RIGHT SIDE: Icons, Profile & Mobile Toggle */}
+          {/* RIGHT SIDE: Profile & Mobile Toggle */}
           <div className="flex items-center gap-3 sm:gap-4">
             
-            {/* Desktop Search (Hidden on Mobile) */}
-            <div className="hidden lg:block relative mr-2">
-               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
-               <input 
-                 type="text" 
-                 placeholder="Search courses..." 
-                 className="bg-gray-100 rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 w-48 transition-all" 
-               />
+            {/* 2. UPDATED: Profile Icon (Disconnected from Link) */}
+            {/* The Link wrapper has been removed, making this just a static icon */}
+            <div className="w-8 h-8 bg-indigo-50 rounded-full flex items-center justify-center border border-indigo-100 shadow-sm">
+              <User className="w-4 h-4 text-indigo-600" />
             </div>
 
-            {/* Notification Bell */}
-            <Link to="/Instructor/notifications" className="relative text-gray-400 hover:text-gray-600 transition-colors">
-              <Bell size={20} />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-            </Link>
-            
-            {/* Profile Picture */}
-            <Link to="/Instructor/profile">
-              <img 
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" 
-                alt="Profile" 
-                className="w-8 h-8 rounded-full border border-gray-200 hover:ring-2 hover:ring-indigo-100 transition-all object-cover"
-              />
-            </Link>
-
-            {/* Desktop Sign Out (Hidden on Mobile) */}
+            {/* Desktop Sign Out */}
             <button 
               onClick={handleSignOut}
               className="hidden md:flex items-center gap-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 px-3 py-2 rounded-xl transition-all font-bold text-sm"
@@ -85,7 +70,7 @@ const InstructorDashboard = () => {
               <span>Sign Out</span>
             </button>
 
-            {/* 👇 MOBILE MENU BUTTON (Visible only on Mobile) */}
+            {/* MOBILE MENU BUTTON */}
             <button 
               className="md:hidden text-gray-500 hover:text-gray-700 p-1"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -96,7 +81,7 @@ const InstructorDashboard = () => {
           </div>
         </div>
 
-        {/* 👇 MOBILE DROPDOWN MENU (Smooth Animation Version) */}
+        {/* MOBILE DROPDOWN MENU */}
         <div 
           className={`
             md:hidden absolute w-full left-0 z-40 bg-white border-t border-gray-100 shadow-xl rounded-b-3xl px-6 flex flex-col gap-4 overflow-hidden transition-all duration-500 ease-in-out origin-top
@@ -105,17 +90,6 @@ const InstructorDashboard = () => {
               : "max-h-0 opacity-0 py-0 -translate-y-2 pointer-events-none"}
           `}
         >
-            
-            {/* Mobile Search */}
-            <div className="relative">
-               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
-               <input 
-                 type="text" 
-                 placeholder="Search courses..." 
-                 className="w-full bg-gray-50 rounded-2xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100" 
-               />
-            </div>
-
             {/* Mobile Links */}
             <div className="flex flex-col gap-1">
               <Link to="/Instructor" onClick={() => setIsMobileMenuOpen(false)} className={getLinkClass("/Instructor", true)}>Dashboard</Link>

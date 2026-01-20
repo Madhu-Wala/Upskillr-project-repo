@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Eye, EyeOff, UserPlus, BookOpen, CheckCircle,Loader2 } from 'lucide-react';
+import { User, Mail, Eye, EyeOff, UserPlus, BookOpen, CheckCircle, Loader2 } from 'lucide-react';
 import API from '../api/axios';
+// 1. INTEGRATION: Import the logo file
+import logo from '../assets/logo.png';
+
 const Signup = () => {
 
   const navigate=useNavigate();
@@ -68,14 +71,17 @@ const Signup = () => {
         
         {/* Header / Logo */}
         <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 mb-4">
-            {/* Dummy Image Placeholder */}
+          
+          {/* Logo Container */}
+          <div className="w-20 h-20 flex items-center justify-center mb-4">
             <img 
-              src="https://via.placeholder.com/40" 
+              src={logo} 
               alt="Logo" 
-              className="w-10 h-10 object-contain brightness-0 invert" 
+              // CHANGE MADE HERE: Added 'rounded-2xl' to curve the edges of the logo
+              className="w-full h-full object-contain rounded-2xl" 
             />
           </div>
+
           <h1 className="text-3xl font-bold text-gray-800">Join Upskillr</h1>
           <p className="text-gray-500 mt-2 text-sm font-medium">
             Start your upskilling journey today
@@ -208,25 +214,6 @@ const Signup = () => {
             {loading ? "Creating Account..." : "Create Account"}
           </button>
 
-          {/* Divider */}
-          {/* <div className="relative flex items-center py-2">
-            <div className="flex-grow border-t border-gray-100"></div>
-            <span className="flex-shrink mx-4 text-gray-400 text-sm">or</span>
-            <div className="flex-grow border-t border-gray-100"></div>
-          </div> */}
-
-          {/* Google Button */}
-          {/* <button
-            type="button"
-            className="w-full py-3.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-2xl font-semibold flex items-center justify-center gap-3 transition-colors active:scale-[0.98]"
-          >
-            <img 
-              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
-              alt="Google" 
-              className="w-5 h-5" 
-            />
-            Continue with Google
-          </button> */}
         </form>
 
         {/* Login Link */}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Menu, X } from 'lucide-react'; // Added Menu, X
 import { useNavigate, useParams } from 'react-router-dom';
 import MarkdownPreview from '@uiw/react-markdown-preview';
 import API from "../../api/axios";
@@ -20,6 +20,9 @@ const CoursePlayer = () => {
   const [currentLesson, setCurrentLesson] = useState(null);
   const [completedLessonIds, setCompletedLessonIds] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Responsive State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Quiz State
   const [showQuiz, setShowQuiz] = useState(false);
@@ -49,10 +52,10 @@ const CoursePlayer = () => {
 
     // Reset UI state when lesson changes
     setShowQuiz(false); 
+    setIsSidebarOpen(false); // Close mobile sidebar on selection
 
     const loadQuizStatus = async () => {
       try {
-        // 1. Check if quiz exists
         const existsRes = await API.get(`/api/lessons/${currentLesson._id}/exists`);
         
         if (!existsRes.data.exists) {
@@ -63,7 +66,6 @@ const CoursePlayer = () => {
         const qId = existsRes.data.quizId;
         setHasQuiz(true);
 
-        // 2. Check if already attempted
         const statusRes = await API.get(`/api/quizzes/${qId}/status`);
 
         setQuizStatus({
@@ -72,7 +74,6 @@ const CoursePlayer = () => {
           quizId: qId
         });
       } catch (err) {
-        // Silent fail on 404 (means no quiz), only log real errors
         if (err.response && err.response.status === 404) {
             setHasQuiz(false);
         } else {
@@ -94,8 +95,6 @@ const CoursePlayer = () => {
         setCourseInfo(res.data.course);
         setLessons(res.data.lessons);
 
-        // ✅ CRITICAL FIX: Load the saved progress from DB
-        // This ensures checkmarks persist after refresh!
         if (res.data.completedLessonIds) {
           setCompletedLessonIds(res.data.completedLessonIds);
         }
@@ -140,87 +139,128 @@ const CoursePlayer = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
+    // Responsive Layout Container: Stack on mobile, Row on Desktop
+    <div className="h-screen w-full bg-slate-50 font-sans flex flex-col lg:flex-row overflow-hidden">
 
-      <div className="flex">
-        {/* Left Lesson Selection */}
-        <LessonSidebar 
-          lessons={lessons} 
-          activeLessonId={currentLesson._id}
-          completedLessonIds={completedLessonIds}
-          onLessonSelect={setCurrentLesson}
+      {/* 1. Mobile Header (Visible only on small screens) */}
+      <div className="lg:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between z-20 shrink-0">
+        <span className="font-bold text-slate-800 truncate max-w-[200px]">{courseInfo?.title}</span>
+        <button 
+          onClick={() => setIsSidebarOpen(true)}
+          className="p-2 bg-slate-100 rounded-lg text-slate-600 hover:bg-slate-200 transition-colors"
+        >
+          <Menu size={20} />
+        </button>
+      </div>
+
+      {/* 2. Left Lesson Sidebar (Drawer on Mobile, Fixed on Desktop) */}
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden backdrop-blur-sm"
+          onClick={() => setIsSidebarOpen(false)}
         />
+      )}
+      
+      <div className={`
+        fixed inset-y-0 left-0 z-40 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out
+        lg:relative lg:translate-x-0 lg:w-80 lg:shadow-none lg:border-r lg:border-slate-200 lg:flex-shrink-0
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        {/* Mobile Close Button for Sidebar */}
+        <div className="lg:hidden p-4 flex justify-end border-b border-slate-100">
+           <button onClick={() => setIsSidebarOpen(false)} className="p-1 text-slate-400">
+             <X size={24} />
+           </button>
+        </div>
 
-        {/* Main Content Area */}
-        <main className="flex-1 p-8 overflow-y-auto max-h-[calc(100vh-73px)]">
-          <div className="max-w-4xl mx-auto">
-            <button 
-              onClick={() => navigate('/Learner/my-courses')}
-              className="flex items-center gap-2 text-gray-400 hover:text-indigo-600 font-bold text-xs mb-4 transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" /> BACK TO COURSE LIST
-            </button>
-            
-            <h1 className="text-4xl font-black text-gray-900 mb-8 tracking-tight">
-              {courseInfo?.title}
-            </h1>
+        <div className="h-full overflow-y-auto">
+          <LessonSidebar 
+            lessons={lessons} 
+            activeLessonId={currentLesson._id}
+            completedLessonIds={completedLessonIds}
+            onLessonSelect={setCurrentLesson}
+          />
+        </div>
+      </div>
 
-            {/* Show Quiz OR Video/Markdown */}
-            {showQuiz ? (
-              <QuizAttempt
-                lessonId={currentLesson._id}
-                onClose={() => setShowQuiz(false)}
-                // ✅ KEY LOGIC: When submitted, update state to "attempted: true"
-                onSubmitted={() => {
-                  // 1. Update Quiz Status to show "View Solutions"
-                  setQuizStatus(prev => ({ 
-                    ...prev, 
-                    attempted: true, 
-                    quizId: prev.quizId 
-                  }));
+      {/* 3. Main Content Area (Video + Details) */}
+      <main className="flex-1 overflow-y-auto p-4 lg:p-8 bg-slate-50 scroll-smooth">
+        <div className="max-w-4xl mx-auto">
+          <button 
+            onClick={() => navigate('/Learner/my-courses')}
+            className="flex items-center gap-2 text-gray-400 hover:text-indigo-600 font-bold text-xs mb-4 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" /> BACK TO COURSE LIST
+          </button>
+          
+          <h1 className="text-2xl lg:text-4xl font-black text-gray-900 mb-6 lg:mb-8 tracking-tight leading-tight">
+            {courseInfo?.title}
+          </h1>
 
-                  // 2. ✅ Update Sidebar Icon to "Completed" immediately
-                  if (!completedLessonIds.includes(currentLesson._id)) {
-                    setCompletedLessonIds(prev => [...prev, currentLesson._id]);
-                  }
-                }}
+          {/* Show Quiz OR Video/Markdown */}
+          {showQuiz ? (
+            <QuizAttempt
+              lessonId={currentLesson._id}
+              onClose={() => setShowQuiz(false)}
+              onSubmitted={() => {
+                setQuizStatus(prev => ({ 
+                  ...prev, 
+                  attempted: true, 
+                  quizId: prev.quizId 
+                }));
+                if (!completedLessonIds.includes(currentLesson._id)) {
+                  setCompletedLessonIds(prev => [...prev, currentLesson._id]);
+                }
+              }}
+            />
+          ) : (
+            <>
+              <VideoPlayer 
+                videoURL={currentLesson.video?.url || currentLesson.video || ""} 
+                title={currentLesson.title} 
               />
-            ) : (
-              <>
-                {/* ✅ FIXED: Extract the URL string properly */}
-                <VideoPlayer 
-                  videoURL={currentLesson.video?.url || currentLesson.video || ""} 
-                  title={currentLesson.title} 
-                />
 
-                <div className="mt-12 bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm">
-                  <div className="flex items-center gap-3 mb-6">
-                    <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase">Lesson Notes</span>
-                    <div className="h-px flex-1 bg-gray-50"></div>
-                  </div>
-                  
-                  <div className="p-8 bg-white" data-color-mode="light">      
-                    <MarkdownPreview
-                      source={currentLesson.contentMarkdown}
-                      style={{ backgroundColor: 'white', color: '#1e293b' }}
-                    />
-                  </div>
+              <div className="mt-8 lg:mt-12 bg-white rounded-3xl p-6 lg:p-10 border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase">Lesson Notes</span>
+                  <div className="h-px flex-1 bg-gray-50"></div>
                 </div>
-              </>
-            )}
-          </div>
-        </main>
+                
+                <div className="prose prose-slate max-w-none" data-color-mode="light">      
+                  <MarkdownPreview
+                    source={currentLesson.contentMarkdown}
+                    style={{ backgroundColor: 'white', color: '#1e293b' }}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+        </div>
 
-        {/* Right Resource & Action Panel */}
+        {/* 4. Mobile Resource Panel (Stacked at bottom of main content on mobile) */}
+        <div className="lg:hidden mt-8 pt-8 border-t border-slate-200">
+           <ResourcePanel 
+            resources={currentLesson.resources || []} 
+            onMarkComplete={handleMarkComplete}
+            onShowFeedback={() => setShowFeedback(true)}
+            currentLessonId={currentLesson._id}
+            hasQuiz={hasQuiz}
+            quizStatus={quizStatus.attempted ? "attempted" : "not_attempted"}
+            onAttemptQuiz={handleAttemptQuiz}
+            onViewSolutions={handleViewSolutions}
+          />
+        </div>
+      </main>
+
+      {/* 5. Desktop Resource Panel (Right Sidebar) */}
+      <div className="hidden lg:block w-96 border-l border-slate-200 bg-white overflow-y-auto flex-shrink-0 p-6">
         <ResourcePanel 
-          // Existing props
           resources={currentLesson.resources || []} 
           onMarkComplete={handleMarkComplete}
           onShowFeedback={() => setShowFeedback(true)}
           currentLessonId={currentLesson._id}
-          // Quiz props
           hasQuiz={hasQuiz}
-          // ✅ This status prop controls the button text
           quizStatus={quizStatus.attempted ? "attempted" : "not_attempted"}
           onAttemptQuiz={handleAttemptQuiz}
           onViewSolutions={handleViewSolutions}
@@ -228,7 +268,7 @@ const CoursePlayer = () => {
       </div>
 
       {showFeedback && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 lg:p-6">
           <div 
             className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" 
             onClick={() => setShowFeedback(false)}
@@ -238,7 +278,6 @@ const CoursePlayer = () => {
               courseTitle={courseInfo?.title}
               onClose={() => setShowFeedback(false)}
               onSubmit={(data) => {
-                console.log("Feedback data:", data);
                 setShowFeedback(false);
               }}
             />

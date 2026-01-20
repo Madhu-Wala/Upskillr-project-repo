@@ -11,9 +11,7 @@ const Reviews = () => {
     const fetchReviews = async () => {
       try {
         setLoading(true);
-        console.log('Fetching reviews from /api/instructor/reviews');
         const response = await API.get('/api/instructor/reviews');
-        console.log('Reviews fetched:', response.data);
         setReviews(response.data);
         setError(null);
       } catch (err) {

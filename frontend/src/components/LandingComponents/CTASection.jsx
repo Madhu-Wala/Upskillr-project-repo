@@ -1,13 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom'; // 1. Import
 
 const CTASection = () => {
+  const navigate = useNavigate(); // 2. Initialize
+
   return (
-    /* Increased py-32 for more height and added a rich gradient */
     <section className="relative py-20 md:py-30 px-6 overflow-hidden">
-      {/* The Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#5a2ff3] via-[#850ce8] to-[#ac02c2] opacity-90" />
-      
-      {/* Optional: Glassmorphism Decorative Circles for more color depth */}
       <div className="absolute -top-24 -left-24 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
       <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl" />
 
@@ -22,7 +21,11 @@ const CTASection = () => {
         </p>
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-          <button className="w-full sm:w-auto px-12 py-5 bg-white text-indigo-600 font-black rounded-2xl hover:scale-105 transition-all shadow-2xl shadow-black/20 text-lg">
+          {/* 3. Add onClick handler */}
+          <button 
+            onClick={() => navigate('/signup')}
+            className="w-full sm:w-auto px-12 py-5 bg-white text-indigo-600 font-black rounded-2xl hover:scale-105 transition-all shadow-2xl shadow-black/20 text-lg"
+          >
             Start Trial
           </button>
         </div>

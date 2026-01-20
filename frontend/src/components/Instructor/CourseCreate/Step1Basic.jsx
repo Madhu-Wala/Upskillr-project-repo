@@ -103,38 +103,6 @@ try {
       onUpdate({ [name]: value });
     }
   };
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-  //   const payload = {
-  //   title: formData.title,
-  //   description: formData.description,
-  //   category: formData.category,
-  //   difficulty: formData.difficulty
-  // };
-  //   try {
-  //     let response;
-  //     if(existingId){
-  //       // UPDATE existing course if we have an ID (Going Forward again)
-  //       response = await API.put(`/api/instructor/courses/${existingId}`, payload);
-  //     }else{
-  //       // CREATE new course first time
-  //       response = await API.post('/api/instructor/courses', payload);
-  //     }
-  //     console.log("Course saved:", response.data);
-  //     const saveId= response.data._id|| existingId;
-
-  // // --- 3. CLEANUP: SUCCESSFUL SAVE ---
-  //     localStorage.removeItem('course_step1_draft'); 
-
-  //    onNext(formData,saveId); // This passes the new Course object (with _id) to parent
-  //   } catch (err) {
-  //     console.error("CREATE COURSE ERROR:", err);
-  //     alert(err.response?.data?.message || "Failed to create course draft");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }
 
   const handleSubmit = async (e) => {
   e.preventDefault();
@@ -153,16 +121,13 @@ try {
       difficulty: formData.difficulty
     };
 
-    console.log("Sending Payload:", cleanPayload);
 
     let response;
     // Agar humpe ID hai, ya hum Edit URL par hain... toh sirf UPDATE
     if (existingId || (isEditURL && urlId !== 'create-course')) {
       const finalId = existingId || urlId;
-      console.log("Updating Course:", finalId);
       response = await API.put(`/api/instructor/courses/${finalId}`, cleanPayload);
     } else {
-      console.log("Creating New Course...");
       response = await API.post('/api/instructor/courses', cleanPayload);
     }
 

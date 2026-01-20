@@ -110,8 +110,6 @@ export const uploadLessonVideo = async (req, res) => {
     const instructorId = req.user._id;
 
     // 1. Debugging logs (Terminal check karo)
-    console.log("Lesson ID:", lessonId);
-    console.log("File received:", req.file);
 
     // 1️⃣ File check (Zaroori hai!)
     if (!req.file) {

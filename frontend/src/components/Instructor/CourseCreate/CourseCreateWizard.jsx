@@ -44,14 +44,10 @@ const location=useLocation();
             API.get(`/api/instructor/courses/${urlCourseId}/lessons`),
             API.get(`/api/instructor/courses/${urlCourseId}/quizzes`) // Fetch quizzes too
           ]);
-          console.log("Fetched Course Data:", courseRes.data);
           setCourseData(courseRes.data.data);
-          console.log("Fetched Lessons Data:", lessonsRes.data);
           setLessons(lessonsRes.data.data);
-          console.log("Fetched Quizzes Data:", quizzesRes.data);
           if (quizzesRes.data.success) {
           setAllQuizzes(quizzesRes.data.data);
-          console.log("Existing Quizzes Loaded:", quizzesRes.data.data.length);
         }
           // Agar backend lessons ke saath quizzes bhi bhej raha hai
           if (lessonsRes.data.quizzes) setAllQuizzes(lessonsRes.data.quizzes);
@@ -101,7 +97,6 @@ const onQuizDeleted = (lessonId) => {
     setAllQuizzes(prev => prev.filter(q => q.lessonId !== lessonId));
 };
     const handleStep4Completion = (data) => {
-      console.log("Navigating to Step 5 with:", { courseData, lessons, allQuizzes });
         setActiveStep(5); // Move to Step 5
     };
 

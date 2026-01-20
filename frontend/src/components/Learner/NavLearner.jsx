@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-// ✅ Added 'User' to imports
-import { BookOpen, Bell, LogOut, Search, Menu, X, User } from 'lucide-react';
+import { LogOut, Menu, X, User } from 'lucide-react'; 
+// 1. Import your logo
+import logo from '../../assets/logo.png'; 
 
 function NavLearner() {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const isLoggedIn = !!localStorage.getItem("token");
 
   function handleSignOut() {
     localStorage.clear();
@@ -27,9 +27,16 @@ function NavLearner() {
         {/* LEFT SIDE: Logo & Desktop Links */}
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/Learner')}>
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <BookOpen className="text-white w-5 h-5" />
+            
+            {/* 2. REPLACED LOGO HERE */}
+            <div className="w-8 h-8 flex items-center justify-center">
+              <img 
+                src={logo} 
+                alt="Upskillr Logo" 
+                className="w-full h-full object-contain rounded-lg" 
+              />
             </div>
+            
             <span className="font-bold text-xl text-gray-900 tracking-tight">UpSkillr</span>
           </div>
 
@@ -41,27 +48,13 @@ function NavLearner() {
           </div>
         </div>
 
-        {/* RIGHT SIDE: Search, Icons, Profile */}
+        {/* RIGHT SIDE: Icons & Profile */}
         <div className="flex items-center gap-3 sm:gap-4">
           
-          {/* Desktop Search (Hidden on Mobile) */}
-          <div className="hidden lg:block relative mr-2">
-               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
-               <input 
-                 type="text" 
-                 placeholder="Search courses..." 
-                 className="bg-gray-100 rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 w-48 transition-all" 
-               />
-            </div>
-
           {/* Icons Group */}
           <div className="flex items-center gap-4">
-            <div className="relative cursor-pointer group">
-              <Bell className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
-              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full"></span>
-            </div>
-
-            {/* ✅ UPDATED: Default Profile Icon */}
+            
+            {/* Default Profile Icon */}
             <div className="w-8 h-8 bg-indigo-50 rounded-full flex items-center justify-center border border-indigo-100 shadow-sm cursor-pointer hover:ring-2 hover:ring-indigo-100 transition-all">
               <User className="w-4 h-4 text-indigo-600" />
             </div>
@@ -95,16 +88,6 @@ function NavLearner() {
             : "max-h-0 opacity-0 py-0 -translate-y-2 pointer-events-none"}
         `}
       >
-        {/* Mobile Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
-          <input 
-            type="text" 
-            placeholder="Search courses..." 
-            className="w-full bg-gray-50 rounded-2xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100" 
-          />
-        </div>
-
         {/* Mobile Links */}
         <div className="flex flex-col gap-1">
           <NavLink to="/Learner" onClick={() => setIsMobileMenuOpen(false)} className={navLinkClass}>Dashboard</NavLink>

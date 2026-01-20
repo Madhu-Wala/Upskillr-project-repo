@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
-import { GraduationCap, Star, Clock, BarChart, CheckCircle, PlayCircle, BookOpen } from "lucide-react";
+import { Star, Clock, BarChart, CheckCircle, PlayCircle, BookOpen } from "lucide-react";
+// ✅ FIX: Use two dots (../../) to go up two levels to 'src', then into 'assets'
+import logo from '../../assets/logo.png'; 
 
 function Navbar(){
     const scrollToSection = (e, id) => {
@@ -12,9 +14,15 @@ function Navbar(){
     return <>
         <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          
+          {/* LOGO SECTION */}
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-              <GraduationCap size={22} />
+            <div className="w-9 h-9 flex items-center justify-center">
+               <img 
+                 src={logo} 
+                 alt="Upskillr Logo" 
+                 className="w-full h-full object-contain rounded-lg" 
+               />
             </div>
             <span className="font-bold text-xl text-gray-900 tracking-tight">UpSkillr</span>
           </div>

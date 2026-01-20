@@ -62,7 +62,6 @@ export const updateCourse = async (req, res) => {
     if (!updatedCourse) {
       return res.status(404).json({ message: "Course not found" });
     }
-    console.log("Updated Course:", updatedCourse);
     res.status(200).json({ success: true, data: updatedCourse });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -123,23 +122,55 @@ export const getInstructorCourses = async (req, res) => {
     const instructorId = req.user._id;
 
     const courses = await Course.aggregate([
+      // 1. Find courses belonging to this instructor
       { $match: { instructorId } },
+
+      // 2. Lookup Enrollments AND the Student Details inside them
       {
         $lookup: {
           from: "enrollments",
-          localField: "_id",
-          foreignField: "courseId",
-          as: "enrollments"
+          let: { courseId: "$_id" },
+          pipeline: [
+            // Match enrollment to this specific course
+            { $match: { $expr: { $eq: ["$courseId", "$$courseId"] } } },
+            
+            // Nested Lookup: Get User details for this enrollment
+            {
+              $lookup: {
+                from: "users",       // Assumes your users collection is named "users"
+                localField: "userId", // ✅ MATCHED YOUR SCHEMA (was studentId)
+                foreignField: "_id",
+                as: "studentDetails"
+              }
+            },
+            
+            // Flatten the studentDetails array (since lookup returns an array)
+            { $unwind: "$studentDetails" },
+
+            // Select only the fields we need for the frontend
+            {
+              $project: {
+                _id: "$studentDetails._id",
+                name: "$studentDetails.name",
+                email: "$studentDetails.email",
+                avatar: "$studentDetails.avatar",
+                progress: 1,           // Keep progress if you add it to enrollment schema later
+                enrolledAt: "$createdAt" // Enrollment date
+              }
+            }
+          ],
+          as: "students" // This creates the 'students' array the frontend expects
         }
       },
+
+      // 3. Add the count field based on the array length
       {
         $addFields: {
-          enrollmentsCount: { $size: "$enrollments" }
+          enrollmentsCount: { $size: "$students" }
         }
       },
-      {
-        $project: { enrollments: 0 }
-      },
+
+      // 4. Sort newest first
       { $sort: { createdAt: -1 } }
     ]);
 

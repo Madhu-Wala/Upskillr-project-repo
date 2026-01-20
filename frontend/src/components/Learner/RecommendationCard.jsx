@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Clock } from 'lucide-react';
+// Removed Clock and Star from imports since they are no longer used
 import { useNavigate } from 'react-router-dom';
 
 const RecommendationCard = ({ course, gradient }) => {
@@ -23,14 +23,13 @@ const RecommendationCard = ({ course, gradient }) => {
 
       {/* Content */}
       <div className="p-5 flex flex-col flex-1">
-        {/* Tags Row */}
+        
+        {/* Tags Row - UPDATED: Removed the Clock/Duration section */}
         <div className="flex justify-between items-start mb-3">
           <span className="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-wider">
             {course.level}
           </span>
-          <span className="text-xs font-bold text-gray-400 flex items-center gap-1">
-            <Clock size={12} /> {course.duration}
-          </span>
+          {/* Removed Duration <span> here */}
         </div>
 
         {/* Title */}
@@ -40,20 +39,12 @@ const RecommendationCard = ({ course, gradient }) => {
 
         {/* Instructor Name */}
         <p className="text-xs font-medium text-gray-500 mb-4 line-clamp-1">
-           By {course.instructor}
+            By {course.instructor}
         </p>
 
-        {/* Footer: Rating & Button */}
-        {/* Footer: Rating & Button */}
-        <div className="mt-auto flex items-center justify-between">
-          <div className="flex items-center gap-1.5 bg-amber-50 px-2 py-1 rounded-lg">
-            <Star size={14} className="text-amber-500 fill-amber-500" />
-            
-            {/* ✅ LOGIC: If rating exists, show number. If null, show "New" */}
-            <span className="text-xs font-black text-amber-700">
-              {course.rating ? Number(course.rating).toFixed(1) : "New"}
-            </span>
-          </div>
+        {/* Footer: UPDATED: Removed Rating section, only kept the Enroll Button */}
+        <div className="mt-auto flex justify-end"> 
+          {/* Removed Rating <div> here */}
 
           <button 
             onClick={() => navigate(`/Learner/courses/${course._id}`)}

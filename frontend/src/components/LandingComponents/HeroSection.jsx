@@ -2,11 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { GraduationCap, Star, Clock, BarChart, CheckCircle, PlayCircle, BookOpen } from "lucide-react";
 
-
 function HeroSection(){
-
-
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const handleMouseMove = (event) => {
@@ -18,16 +15,26 @@ function HeroSection(){
     };
   }, []);
 
-    return    <div className="min-h-screen bg-white font-sans selection:bg-indigo-100 selection:text-indigo-700 relative overflow-hidden">
+  const scrollToSection = (e, sectionId) => {
+    e.preventDefault();
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
-    {/* GLOW BACKGROUND (Slightly increased opacity to 0.30 for better visibility) */}
+  return (
+    <div className="min-h-screen bg-white font-sans selection:bg-indigo-100 selection:text-indigo-700 relative overflow-hidden">
+
+      {/* GLOW BACKGROUND */}
       <div 
         className="pointer-events-none fixed inset-0 z-0 transition duration-300"
         style={{
           background: `radial-gradient(800px at ${mousePosition.x}px ${mousePosition.y}px, rgba(124, 58, 237, 0.15), transparent 80%)`
         }}
       />
-    <header className="relative pt-16 pb-10 lg:pt-32 lg:pb-40 z-10">
+      
+      <header className="relative pt-16 pb-10 lg:pt-32 lg:pb-40 z-10">
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
           
           <div>
@@ -60,23 +67,8 @@ function HeroSection(){
               </button>
             </div>
 
-            <div className="mt-10 flex items-center gap-4 text-sm font-medium text-gray-500">
-              <div className="flex -space-x-3">
-                <img className="w-10 h-10 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=64&h=64" alt="User" />
-                <img className="w-10 h-10 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=64&h=64" alt="User" />
-                <img className="w-10 h-10 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=64&h=64" alt="User" />
-              </div>
-              <div className="flex flex-col">
-                <div className="flex text-yellow-400">
-                  <Star size={14} fill="currentColor" />
-                  <Star size={14} fill="currentColor" />
-                  <Star size={14} fill="currentColor" />
-                  <Star size={14} fill="currentColor" />
-                  <Star size={14} fill="currentColor" />
-                </div>
-                <span>10k+ Active Learners</span>
-              </div>
-            </div>
+            {/* REMOVED: The section with User Avatars, Stars, and "10k+ Active Learners" has been deleted here. */}
+          
           </div>
 
           {/* Right: Abstract Dashboard Visual */}
@@ -128,5 +120,7 @@ function HeroSection(){
         </div>
       </header>
     </div>
+  );
 }
+
 export default HeroSection;
